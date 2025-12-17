@@ -465,3 +465,4 @@ Visual Polish
 # 12/17/2025
 - Removed the partially-working level editor tab so I could release v3.3.1.
 - Removed gridSizeText changes when working with the spritesheet editor.
+- Changed version number to v3.3.1 to reflect tiny update before v4.0 release.
