@@ -1,0 +1,98 @@
+Folder PATH listing for volume Data
+Volume serial number is 6EF4-FA24
+D:.
+¦   .gitattributes
+¦   CHANGELOG.md
+¦   filemap.txt
+¦   gpt-spec.txt
+¦   LICENSE
+¦   README.md
+¦   sg3.js
+¦   sg3_Classes.js
+¦   sg3_Colors.js
+¦   sg3_Draw.js
+¦   sg3_Files.js
+¦   sg3_Grid.js
+¦   sg3_Inputs.js
+¦   sg3_Mouse.js
+¦   sg3_style.css
+¦   sg3_Tools.js
+¦   sg3_Window - Copy.js
+¦   sg3_Window.js
+¦   SpriteGrid3.html
+¦   
++---.idea
+¦       .gitignore
+¦       jpa-buddy.xml
+¦       misc.xml
+¦       modules.xml
+¦       SpriteGrid3.iml
+¦       workspace.xml
+¦       
++---Drawing Files
+¦       arrows.gpt
+¦       arrows.gss
+¦       blank
+¦       default.gpt
+¦       dunno.gpt
+¦       eraser.gat
+¦       eraser.gpt
+¦       eraser2.gat
+¦       eraser2.gpt
+¦       everyTestingObject.gss
+¦       extend.gat
+¦       floor_underground.gat
+¦       floor_underground.gpt
+¦       goomba_Messed.gat
+¦       heart.gat
+¦       heartAll.png
+¦       HeartNoAll.png
+¦       heartNoAlpha.png
+¦       heartNoGrid.png
+¦       heart_nobg.png
+¦       Human16.gss
+¦       HumanFemale1_FacingDown.gat
+¦       HumanMale1.gpt
+¦       HumanMale1_FacingDown.gat
+¦       IMG_8268.JPEG
+¦       KazeCharacterSprite.gpt
+¦       KazeCharacterSprite.gss
+¦       level_try.png
+¦       level_try2.png
+¦       Nintendo1.gat
+¦       Nintendo1.gpt
+¦       Nintendo2.gat
+¦       Nintendo2.gpt
+¦       PrinceCharacterSprite.gpt
+¦       PrinceCharacterSprite.gss
+¦       rainbow.gat
+¦       random.gpt
+¦       sammich.gat
+¦       sg3_test_1.gat
+¦       SG_Dungeon_Spruce.gss
+¦       SingleCellUpdateTry.gat
+¦       SingleCellUpdateTry.png
+¦       smb1_goomba.gat
+¦       smb1_goomba.gpt
+¦       smb1_outside_colors.gpt
+¦       smb1_outside_floor.gat
+¦       smb3_goomba.gat
+¦       smb3_goomba.gpt
+¦       smb_goombas.gss
+¦       smw_goomba.gat
+¦       smw_goomba.gpt
+¦       someFlag.gat
+¦       test.gat
+¦       test.gpt
+¦       test2.gat
+¦       test_3.3.gss
+¦       tryPadding.png
+¦       underground.gss
+¦       
++---SpruceHandoff
+        DiffNote.txt
+        ErrorEvidence.docx
+        filemap.txt
+        primer.md
+        todo.md
+        

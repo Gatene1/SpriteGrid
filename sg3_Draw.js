@@ -2,7 +2,7 @@ function drawAll() {
     // Each if-statement will check to see if this is the initial drawing of WebApp or if the Window is active and
     // the Window is visible, then draw its contents.
     if (isWindowActive(0, true)) {
-        //if (firstDraw) { drawGrid(); }
+        if (firstDraw) { drawGrid(); }
         //drawGridFromRequest();
         drawPreviewUpdate();
     }
@@ -76,15 +76,29 @@ function drawSquare (x, y, width, height, stroke, fillColor, whichCanvas = 0,
     }
     canvasChoice.strokeStyle = strokeColor;
     canvasChoice.lineWidth = 1;
-    if (stroke) canvasChoice.strokeRect(x, y, width, height);
     if (checkerBg) {
         canvasChoice.fillStyle = alphaPattern;
         canvasChoice.fillRect(x, y, width, height);
     }
     if (fill) {
         canvasChoice.fillStyle = fillColor;
+        if (stroke) {
+            canvasChoice.fillRect(x, y, width, height);
+        } else {
+            canvasChoice.fillRect(x, y, width, height);
+        }
     }
-    canvasChoice.fillRect(x, y, width, height);
+    if (stroke) canvasChoice.strokeRect(x, y, width, height);
+}
+
+// Helper function for the drawGrid methods below, by Sprucey-Poo :-*
+function getCellXY(index, border = true) {
+    let row = Math.floor(index / gridSize);
+    let col = index % gridSize;
+    return {
+        x: col * cellSize + 2,
+        y: row * cellSize + 2
+    };
 }
 
 function drawGrid() {
@@ -93,9 +107,13 @@ function drawGrid() {
 
     canvasGridCTX.clearRect(0, 0, 775, 775);
 
+    drawBg();
+
     for (i = 0; i < gridSize; i++) {
         for (j = 0; j < gridSize; j++) {
             currCell = (i * gridSize) + j;
+
+            let { x, y } = getCellXY(currCell, showTheGrid);
 
             if (grid[currCell] == 0) {
                 if (!showTheGrid && !showAlpha) {
@@ -103,15 +121,15 @@ function drawGrid() {
                 }
                 if (showTheGrid) {
                     currCellColor = "rgba(245, 245, 245, .5)";
-                    drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+                    drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
                 } else {
                     currCellColor = "rgba(245, 245, 245, 0)";
-                    drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
+                    drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
                 }
             } else {
                 currCellColor = uIntToRgbaString(grid[currCell]);
                 //alert (currCellColor);
-                drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
             }
 
         }
@@ -119,12 +137,32 @@ function drawGrid() {
 }
 
 function drawGridFromRequest(gridElement) {
-    let y = Math.floor(gridElement / gridSize) * cellSize;
+    /*let y = Math.floor(gridElement / gridSize) * cellSize;
     let col = gridElement - ((y / cellSize) * gridSize);
-    let x = col * cellSize;
-    gridSizeRangeText.value = x + ", " + y;
+    let x = col * cellSize;*/
+    let { x, y } = getCellXY(gridElement);
+    let xyMax = gridSize * cellSize;
+    let currCellColor;
 
-    drawSquare(x, y, cellSize, cellSize, showTheGrid, uIntToRgbaString(grid[gridElement]), 0, GRID_BORDER_COLOR, true, showAlpha)
+    if (x <= xyMax && y < xyMax) {
+        canvasGridCTX.clearRect(x, y, cellSize, cellSize);
+        if (grid[gridElement] == 0) {
+            if (!showTheGrid && !showAlpha) {
+                currCellColor = "rgba(255, 255, 255, .5)";
+                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
+            }
+            if (showTheGrid) {
+                currCellColor = "rgba(245, 245, 245, .5)";
+                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
+                //drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+            } else {
+                currCellColor = "rgba(245, 245, 245, 0)";
+                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
+            }
+        } else {
+            drawSquare(x, y, cellSize, cellSize, showTheGrid, uIntToRgbaString(grid[gridElement]), 0, GRID_BORDER_COLOR, true, showAlpha)
+        }
+    }
 }
 
 function drawPreviewSquare(dimensions) {
@@ -276,7 +314,7 @@ function drawSpriteCanvasUpdate() {
                 x += spriteCellSize;
             }
         }
-        gridSizeRangeText.value = startingNumViewable + " - " + endingNumViewable;
+       // gridSizeRangeText.value = startingNumViewable + " - " + endingNumViewable;
     }
     x = 0;
     y = 0;
@@ -413,6 +451,7 @@ function changeLevelBG() {
 
 function turnGridOnOff() {
     showTheGrid = showGridCheckbox.checked;
+    firstDraw = true;
 }
 
 function turnLevelGridOnOff() {
@@ -458,6 +497,7 @@ function flipHorizontally() {
         }
     }
     grid = flipped;
+    firstDraw = true;
 }
 
 function flipVertically() {
@@ -476,14 +516,14 @@ function flipVertically() {
         }
     }
     grid = flipped;
+    firstDraw = true;
 }
 
-function queueRedraw() {
-    if (!redrawQueued) {
-        redrawQueued = true;
-        requestAnimationFrame(() => {
-            //drawGridFromRequest();
-            redrawQueued = false;
-        });
+function drawBg() {
+    if (showBgBool) {
+        drawSquare(0, 0, gridSize * cellSize + 4, gridSize * cellSize + 4, false, bgColorChoose, 0, GRID_BORDER_COLOR, true, false);
+    } else {
+        canvasGridCTX.clearRect(0, 0, gridSize * cellSize + 4, gridSize * cellSize + 4);
     }
+
 }

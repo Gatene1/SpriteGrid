@@ -69,6 +69,7 @@ function parseOpenFile() {
         }
         displayLegacyAlert = false;
     }
+    drawGrid();
 }
 
 function parsePaletteFile() {

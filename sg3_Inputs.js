@@ -76,7 +76,7 @@ function saveGridAsPNG() {
 
     tempCtx.drawImage(
         canvasGrid,   // source canvas
-        0, 0, exportSize, exportSize,   // source area
+        2, 2, exportSize, exportSize,   // source area
         0, 0, exportSize, exportSize    // destination
     );
 

@@ -55,6 +55,7 @@ function refreshGridOutput() {
 function zeroOutRefresh() {
     fillArrayWithZeroes();
     refreshGridOutput();
+    drawGrid();
 }
 
 function changeCellColor(e) {
@@ -74,6 +75,7 @@ function RMB() {
     if (Math.floor(mouseXGrid / cellSize) <= gridSize - 1) {
         grid[mouseToGrid] = 0;
         refreshGridOutput();
+        drawGridFromRequest(mouseToGrid);
     }
 }
 
@@ -158,3 +160,8 @@ function levelClickFunction() {
         if (isNotEmpty(5)) levelSpriteChosen = levelCellOn;
 }
 
+function showBgFunc() {
+    showBgBool = !showBgBool;
+    bgColorChoose = showBgBool ? colorPicker.color.rgbaString : 4294967295;
+    firstDraw = true;
+}

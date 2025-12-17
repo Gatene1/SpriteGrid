@@ -29,6 +29,8 @@ var cSizeRangeText = document.getElementById("cellSizeRangeText");
 var gridOutput = document.getElementById("gridOutput");
 var savePNGButton = document.getElementById("savePNGButton");
 window.redrawQueued = false;
+window.BgColor = 4294967295;
+window.showBgBool = false;
 
 //var grid = ["0"];
 window.grid = new Uint32Array(gridSize * gridSize);
@@ -116,6 +118,7 @@ var showTransparentCheckbox = document.getElementById("showTransparentCheckbox")
 window.showAlpha = true;
 window.flipHorizontal = document.getElementById("flipHorizontal");
 window.flipVertical = document.getElementById("flipVertical");
+window.showBg = document.getElementById("showBg");
 
 // Vars for Second Window (Preview)
 var prevLmbDown = false;
@@ -306,9 +309,9 @@ window.onload = function() {
     divSide6.addEventListener('mousedown', function() { openWindow(5);
         windowZRearrange(5);
         windowZRefresh(); }, true);
-    divSide7.addEventListener('mousedown', function() { openWindow(6);
+    /*divSide7.addEventListener('mousedown', function() { openWindow(6);
         windowZRearrange(6);
-        windowZRefresh(); }, true);
+        windowZRefresh(); }, true);*/
     cellSizeRange.addEventListener('change', () => { changeCellSize(); drawGrid(); }, false);
     gridSizeRange.addEventListener('change', () => { changeGridSize(); drawGrid(); }, false);
 
@@ -363,12 +366,13 @@ window.onload = function() {
     closeHW.addEventListener('mousedown', function() { closeWindow(0); }, false);
     resetGridButton.addEventListener('mousedown', zeroOutRefresh, true);
     showGridCheckbox.addEventListener('change', turnGridOnOff, true);
-    showTransparentCheckbox.addEventListener('change', function() { showAlpha = !showAlpha; }, true);
+    showTransparentCheckbox.addEventListener('change', function() { showAlpha = !showAlpha; firstDraw = true; }, true);
     savePNGButton.addEventListener('click', saveGridAsPNG, true);
     fileSavingOpenButton.addEventListener('click', openSingleDrawing, true);
     fileSavingSaveButton.addEventListener('click', saveSingleDrawing, true);
     flipHorizontal.addEventListener('click', flipHorizontally);
     flipVertical.addEventListener('click', flipVertically);
+    showBg.addEventListener('change', showBgFunc);
 
     // Listeners for Second Window (Preview)
     prevLittleWindow.addEventListener('mousedown', prevLittleWindowClick, false);

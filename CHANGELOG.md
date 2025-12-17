@@ -458,3 +458,10 @@ Visual Polish
 
 # 7/23/2025
 - Made the larger canvases (24x24, 28x28, and 32x32) not lag when utilizing by revamping the whole drawGrid() method.
+
+# 7/24/2025
+- After making the change yesterday with only one cell drawn, there were hiccups with the cells being misaligned. I changed the drawSquare() function to draw the stroke last, so there's always an even-looking line. Gotta love smoke & mirrors.
+
+# 12/17/2025
+- Removed the partially-working level editor tab so I could release v3.3.1.
+- Removed gridSizeText changes when working with the spritesheet editor.
