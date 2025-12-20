@@ -1,0 +1,525 @@
+body {
+    font-family: "Trebuchet MS";
+    margin: 0px;
+    overflow: clip;
+}
+
+.divTitle {
+    position: absolute;
+    background-color: darkgreen;
+    width: 54%;
+    height: 100%;
+    top: 0px;
+    left: 2.60%;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: bold;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: scroll;
+    visibility: visible;
+}
+
+.divTitle2 {
+    position: absolute;
+    background-color: darkgreen;
+    width: 300px;
+    height: 300px;
+    bottom: 0px;
+    left: 57.00%;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: normal;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: clip;
+    visibility: visible;
+}
+
+.divTitle3 {
+    position: absolute;
+    background-color: darkgreen;
+    width: 25%;
+    height: 60%;
+    top: 0px;
+    left: 57.00%;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: normal;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: scroll;
+    visibility: visible;
+}
+
+.divTitle4 {
+    position: absolute;
+    background-color: darkgreen;
+    width: 300px;
+    height: 50%;
+    top: 0px;
+    right: 0px;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: normal;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: clip;
+    visibility: visible;
+}
+
+.divTitle5 {
+    position: absolute;
+    background-color: darkgreen;
+    width: 300px;
+    height: 49%;
+    bottom: 0px;
+    right: 0px;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: normal;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: clip;
+    visibility: visible;
+}
+
+.divTitle6 {
+    position: absolute;
+    background-color: darkgreen;
+    width: 50%;
+    height: 49%;
+    top: 200px;
+    left: 27%;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: normal;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: clip;
+    visibility: collapse;
+}
+
+.divTitle7 {
+    position: absolute;
+    background-color: darkgreen;
+    width: 50%;
+    height: 79%;
+    top: 100px;
+    left: 27%;
+    padding: 0px;
+    margin: 0px;
+    color: #ffffff;
+    font-weight: normal;
+    border: 2px solid #000000;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow: clip;
+    visibility: collapse;
+}
+
+.divSide1 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 0px;
+    left: 0px;
+    border: solid black 2px;
+    visibility: hidden;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divSide2 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 23%;
+    left: 0px;
+    border: solid black 2px;
+    visibility: hidden;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divSide3 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 46%;
+    left: 0px;
+    border: solid black 2px;
+    visibility: hidden;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divSide4 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 69%;
+    left: 0px;
+    border: solid black 2px;
+    visibility: hidden;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divSide5 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 92%;
+    left: 0px;
+    border: solid black 2px;
+    visibility: hidden;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divSide6 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 115%;
+    left: 0px;
+    border: solid black 2px;
+    visibility: visible;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divSide7 {
+    position: relative;
+    background-color: darkgreen;
+    width: 2.3%;
+    height: 20%;
+    top: 115%;
+    left: 0px;
+    border: solid black 2px;
+    visibility: visible;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+
+.divTitleBreakDown {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+}
+
+.eightyThree {
+    font-weight: bold;
+    font-style: normal;
+}
+
+.eightyThreeBlur {
+    font-weight: normal;
+    font-style: italic;
+}
+
+
+/*.eightyThreeColor { color: #878787; font-weight: normal; font-style: italic; }*/
+
+
+/*.eightyThreeOut { color: #878787; font-weight: normal; font-style: italic; }*/
+
+
+/*.eightyThreeFile { color: #878787; font-weight: normal; font-style: italic; }*/
+
+
+/*.eightyThreeSprite { color: #878787; font-weight: normal; font-style: italic; }*/
+
+
+/*.eightyThreeLevel { color: #878787; font-weight: normal; font-style: italic; }*/
+
+.divInnerBottomFlex {
+    background-color: #ffffff;
+    height: 100%;
+    color: #000000;
+    padding: 3px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.divInnerBottomFlexCol {
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    color: #000000;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-content: flex-start;
+}
+
+.divInnerBottomFlexColChild {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+.divInnerBottomFlexColChildSprite {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    background-color: #ffffff;
+    overflow: clip;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.divInnerBottomFlexColChildFile {
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    color: #000000;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.divInnerBottomFlexColChildLevel {
+    width: 100%;
+    height: 96%;
+    text-align: center;
+    background-color: #ffffff;
+    overflow: clip;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.divInnerBottomFlexGrid {
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    color: #000000;
+    padding: 3px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.divInnerBottomFlex4 {
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    color: #000000;
+    padding: 3px;
+    display: flex;
+    flex-direction: row;
+}
+
+.divInnerBottomFlex41 {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    text-align: center;
+}
+
+.spriteRightButtonDiv {
+    width: 23%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+}
+
+.levelRightButtonDiv {
+    width: 20%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    font-weight: bold;
+    color: #000000;
+}
+
+.divForSpriteGrid {
+    overflow: scroll;
+}
+
+.divForLevelGrid {
+    width: 80%;
+    height: 100%;
+    overflow: scroll;
+}
+
+.seven {
+    width: 7%;
+    cursor: pointer;
+}
+
+.ten {
+    width: 10%;
+    cursor: pointer;
+}
+
+.eightyThree,
+.eightyThreeBlur {
+    width: 83%;
+    text-align: center;
+    cursor: grab;
+}
+
+#gridSizeRangeText {
+    width: 150px;
+    font-weight: bold;
+}
+
+#cellSizeRangeText {
+    width: 150px;
+    font-weight: bold;
+}
+
+#gridOutput {
+    font-family: "Courier New";
+}
+
+#colorChoose {
+    width: 30%;
+    text-align: center;
+}
+
+#resetGridButton,
+#savePNGButton, #flipHorizontal, #flipVertical {
+    padding: 5px;
+    width: fit-content;
+    border: solid 2px black;
+    margin-bottom: 3px;
+}
+
+#saveButton,
+#loadPalletteButton,
+#savePalletteButton {
+    padding: 3px;
+    width: fit-content;
+    border: solid 2px black;
+}
+
+#fileSavingOpenButton,
+#fileSavingSaveButton,
+#newSSheet,
+#openSSheet,
+#newLevel,
+#openLevel {
+    border: solid 2px black;
+    margin-bottom: 3px;
+    width: fit-content;
+}
+
+#spriteSaveButton,
+#spriteImportWorkingGrid,
+#spriteExportWorkingGrid,
+#eraseSingleSprite,
+#levelSaveButton,
+#levelImportWorkingGrid,
+#levelCellErase,
+#levelBgColor,
+#levelImportSpriteChosen,
+#newLevel,
+#openLevel,
+#newSSheet,
+#openSSheet {
+    border: solid 2px black;
+    margin-bottom: 3px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#gridSizeRangeSlider,
+#cellSizeRangeSlider {
+    accent-color: #006400;
+}
+
+#colorTextbox {
+    margin-left: 5px;
+}
+
+#colorTextElement {
+    width: 150px;
+}
+
+#copyColorCode {
+    cursor: pointer;
+}

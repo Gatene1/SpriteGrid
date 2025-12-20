@@ -1,0 +1,32 @@
+
+Gatene Palette File Format (.gpt)
+----------------------------------
+
+Header: "PAL"
+  - The first 3 characters must be "PAL"
+  - This identifies the file as a valid Gatene Palette file
+
+Format Flag: character at index 3
+  - "#" = Legacy format (Hex String)
+  - "|" = Modern format (Uint32)
+
+Data Structure:
+
+If format flag is "#":
+  - Each color is a 7-character hex string: "#RRGGBB"
+  - Alpha is assumed to be 255 (fully opaque) and appended as "FF" during parsing
+  - Colors are contiguous: no delimiters beyond the '#' prefix for each block
+  - Example: PAL#FF0000#00FF00#0000FF
+
+If format flag is "|":
+  - Each color is stored as an unsigned 32-bit integer (0 to 4294967295)
+  - Colors are delimited by "|"
+  - Example: PAL|4294901760|4278255360|4278190335
+
+Recommended Extension:
+  - .gpt (Gatene Palette Technology)
+
+Notes:
+  - This file format is custom and designed for SpriteGrid3.
+  - Parsers should validate the "PAL" header and format flag before processing data.
+  - Future versions may introduce additional format flags or embedded metadata.
