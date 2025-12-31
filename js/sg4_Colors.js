@@ -65,6 +65,23 @@ function hexToRGB(hexString) {
     }
 }
 
+function hex8ToRgbaBytes(hex) {
+    // Expect "#RRGGBBAA"
+    // If your uint32ToHex8 returns "#RRGGBB", we treat it as fully opaque.
+    hex = (hex || "").trim();
+    if (hex.startsWith("#")) hex = hex.slice(1);
+
+    if (hex.length === 6) hex += "FF";
+    if (hex.length !== 8) return [0, 0, 0, 0];
+
+    const r = parseInt(hex.slice(0, 2), 16) & 255;
+    const g = parseInt(hex.slice(2, 4), 16) & 255;
+    const b = parseInt(hex.slice(4, 6), 16) & 255;
+    const a = parseInt(hex.slice(6, 8), 16) & 255;
+    return [r, g, b, a];
+}
+
+
 function uIntToRgbString(uInt) {
     const stringVersion = uIntToRgb(uInt);
     return "rgb(" + stringVersion.r + ", " + stringVersion.g + ", " + stringVersion.b + ")";
@@ -124,4 +141,15 @@ function createAlphaPattern() {
 
     // Store globally
     alphaPattern = canvasGridCTX.createPattern(patternCanvas, "repeat");
+}
+
+function hex8ToAABBGGRR(hex) {
+    // "#RRGGBBAA" → Uint32 0xAABBGGRR for ImageData Uint32 view
+    hex = hex.startsWith("#") ? hex.slice(1) : hex;
+    if (hex.length === 6) hex += "FF";
+    const rr = parseInt(hex.slice(0,2),16) & 255;
+    const gg = parseInt(hex.slice(2,4),16) & 255;
+    const bb = parseInt(hex.slice(4,6),16) & 255;
+    const aa = parseInt(hex.slice(6,8),16) & 255;
+    return (aa<<24) | (bb<<16) | (gg<<8) | rr;
 }

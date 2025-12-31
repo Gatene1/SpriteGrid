@@ -466,3 +466,19 @@ Visual Polish
 - Removed the partially-working level editor tab so I could release v3.3.1.
 - Removed gridSizeText changes when working with the spritesheet editor.
 - Changed version number to v3.3.1 to reflect tiny update before v4.0 release.
+
+# 12/23, 12/24, and 12/25/2025
+- Removed the slider and text field associated with the width and height of the Working Grid
+- Replaced the above with 2 editable text boxes for the width and the height of the Working Grid
+- Added a constrain proportions icon for the height and with. When disabled, it will allow a different width and height of the Working Grid.
+- Got rid of the "Save As PNG" button, and made PNG selectable as a file type when you click "Save Drawing".
+- Replaced the "Save As PNG" button with a "Trim Whitespace" button to get rid of all the whitespace around the drawing in the Working Grid.
+- Added 4 "bump" buttons that represent up, right, down, and left. They will "bump" the drawing in the Working Grid in that direction by 1 pixel.
+- Revamped the templates for the filetypes of .gat and .gss to allow for differing grid dimensions and different bit shifting paradigm to AABBGGRR.
+
+# 12/30/2025
+- Added another offscreen canvas to make drawing faster for the bigger grid sizes.
+- Added functionality when the grid's been resized to dimensions over 64x64 (4,096 pixels), the grid is no longer drawn; to save on resources, and make drawing smoother.
+- Fixed preview window glitch, where it was never showing the preview of what was drawn.
+- Fixed the Saved Color Palette glitch, where it wasn't showing on first startup.
+- Fixed issue where the canvas wouldn't gain scrollbars and the ability to scroll when the drawing was over 32x32.

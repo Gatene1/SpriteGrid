@@ -1,0 +1,134 @@
+SpriteGrid SpriteSheet File Spec — .gss (Sprite Sheet)
+=================================================
+
+Purpose
+-------
+A .gss file stores a SpriteGrid “Sprite Sheet”: a fixed-size list of sprite slots,
+where each slot may contain a square pixel-art sprite (typically from the Working Grid).
+
+SpriteGrid v4 stores .gss as a *text* format:
+  MAGIC | JSON | PAYLOAD
+
+This keeps the file human-auditable (no raw binary blobs), while still being fast to parse.
+
+File Type
+---------
+Extension: .gss
+Encoding: UTF-8 text
+Line Endings: LF or CRLF (either is fine)
+
+High-Level Layout
+-----------------
+The file is a single UTF-8 string with 3 sections separated by a single pipe (|):
+
+1) MAGIC
+2) JSON (metadata)
+3) PAYLOAD (sprite slot data)
+
+Formal layout:
+  <MAGIC> "|" <JSON> "|" <PAYLOAD>
+
+MAGIC
+-----
+Must be exactly:
+  SG4GSS
+
+JSON Section
+------------
+A JSON object describing the sheet and how to interpret the payload.
+
+Required fields:
+
+1) format (string)
+   Must be "GSS".
+
+2) version (number)
+   Must be >= 4 for this spec.
+
+3) meta (object)
+   Required keys:
+   - createdUtc (string, ISO 8601 UTC)
+   - updatedUtc (string, ISO 8601 UTC)
+
+4) sheet (object)
+   Required keys:
+   - maxSlots (number)  Total number of sprite slots in the sheet (ex: 500)
+   - cellPx   (number)  UI cell size for the sheet grid display (ex: 64). (Display-only)
+   - packing  (string)  Must be "0xRRGGBBAA"
+   - encoding (string)  Must be "RGBA32"
+   Optional keys (recommended):
+   - name (string)      Display name (no filesystem assumptions)
+   - app (string)       "SpriteGrid"
+   - appVersion (string)
+   - notes (string)
+
+JSON Delimiter Rule
+-------------------
+Because section delimiters are pipes (|), any JSON string value MUST NOT contain
+a raw pipe character. If needed, store a pipe as an escaped unicode sequence:
+  "\u007C"
+
+PAYLOAD Section
+---------------
+The payload stores sprite slot records in slot order [0..maxSlots-1], separated by pipes.
+
+General form:
+  <slot0>|<slot1>|<slot2>|...|<slotN>
+
+Each slot record is either:
+- "-"   (a single hyphen) meaning the slot is empty
+or
+- a sprite record:
+    "S" ":" <size> ":" <values>
+
+Where:
+- <size> is a positive integer (sprite width and height in pixels)
+- <values> is a comma-separated list of unsigned 32-bit integers (base-10),
+  length MUST equal size*size.
+- Pixel packing is RGBA32 in 0xRRGGBBAA (decimal representation in the payload).
+- 0 means fully transparent (0x00000000).
+
+Sprite record example (2x2):
+  S:2:0,4294967295,4294967295,0
+
+Slot Count Rules
+----------------
+- The payload MAY contain fewer than maxSlots slot records.
+  Missing trailing slots are assumed to be empty ("-").
+- The payload MUST NOT contain more than maxSlots slot records.
+- Readers should tolerate extra whitespace around records, but writers should not add it.
+
+Validation Rules
+----------------
+A reader should reject the file if:
+- MAGIC is not "SG4GSS"
+- JSON cannot be parsed
+- JSON.format != "GSS"
+- JSON.version < 4
+- sheet.maxSlots is missing or not a positive integer
+- Any non-empty slot is not in the "S:size:values" form
+- values length != size*size
+- Any value is not a valid unsigned 32-bit integer (0..4294967295)
+
+Display / Clipping (UI Note)
+----------------------------
+SpriteGrid’s UI may display sprites inside a fixed-size sheet cell (ex: 64x64) using
+a small preview scale (ex: 1–4 px per sprite pixel). If a sprite is large, it may be
+clipped by the cell for display. This is *presentation only*; the .gss payload always
+stores the full sprite pixel data.
+
+Reserved / Future Extensions
+----------------------------
+Writers may add new fields to JSON. Readers should ignore unknown JSON fields.
+
+Future payload encodings may be added (for performance or compression). If added,
+they must be signaled via JSON, for example:
+  sheet.payloadType = "u32_csv" (this spec)
+  sheet.payloadType = "rle_u32"
+  sheet.payloadType = "base64_u32"
+
+Unless explicitly supported, readers must reject unknown payload types.
+
+Example
+-------
+SG4GSS|{"format":"GSS","version":4,"meta":{"createdUtc":"2025-12-25T00:00:00Z","updatedUtc":"2025-12-25T00:00:00Z"},"sheet":{"maxSlots":5,"cellPx":64,"encoding":"RGBA32","packing":"0xRRGGBBAA","name":"Example Sheet"}}|S:2:0,4294967295,4294967295,0|-|-|S:1:4294967295|-

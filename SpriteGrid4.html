@@ -42,10 +42,9 @@
         S<br>P<br>R
     </div>
 
-    <!--<div id="divSide7" class="divSide7">
-        &lt;!&ndash; Level Builder //&ndash;&gt;
+    <div id="divSide7" class="divSide7">
         L<br>E<br>V<br>E<br>L
-    </div>-->
+    </div>-
     <!-- End Minimized Window Section Elements //-->
 
     <!-- First Window (Grid) //-->
@@ -56,23 +55,39 @@
             <div id="closeHW" class="ten">&nbsp;X&nbsp;</div>
         </div>
         <div class="divInnerBottomFlexGrid">
-            <div>
-                <canvas id="canvasGrid" width="775" height="775"> </canvas>
+            <div class="divInnerBottomCanvasGrid">
+                <canvas id="canvasGrid"></canvas>
             </div>
             <div class="input-group-sm">
 
-                <label for="gridSizeRangeSlider" class="form-label">Choose Grid Size:</label><br>
-                <input type="range" min="4" max="32" step="4" id="gridSizeRangeSlider"><br>
-                <input type="text" disabled class="form-control" id="gridSizeRangeText" value="# X #">
-                <br><br>
+                <div class="dimRow">
+                    <div class="dimGroup">
+                        <label class="dimLabel" for="gridWInput">Width</label>
+                        <input id="gridWInput" type="number" min="1" max="512" step="1" value="16" />
+                    </div>
+
+                    <button id="gridLockBtn" class="linkBtn linkOn" title="Lock aspect ratio" aria-pressed="true">
+                        🔗
+                    </button>
+
+                    <div class="dimGroup">
+                        <label class="dimLabel" for="gridHInput">Height</label>
+                        <input id="gridHInput" type="number" min="1" max="512" step="1" value="16" />
+                    </div>
+
+                    <button id="gridApplyBtn" class="applyBtn btn btn-success btn-sm" title="Apply dimensions">Apply</button>
+                </div>
+
+
+                <br>
 
 
                 <label for="cellSizeRangeSlider" class="form-label">Choose Cell Size:</label><br>
                 <input type="range" min="2" max="24" step="2" id="cellSizeRangeSlider"><br>
                 <input type="text" disabled id="cellSizeRangeText" class="form-control" value="# Pixels"><br>
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="button" id="flipHorizontal">↔ Flip Horizontally</button><br>
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="button" id="flipVertical">↕ Flip Vertically</button><br><br>
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="button" id="savePNGButton">Save As PNG</button><br>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="button" id="flipVertical">↕ Flip Vertically</button><br>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="button" id="trimWhitespace">Trim Whitespace</button><br><br>
                 <button type="button" class="btn btn-success btn-sm" data-bs-toggle="button" id="resetGridButton">New Drawing</button><br>
                 <button type="button" class="btn btn-success btn-sm" id="fileSavingOpenButton">Open Drawing</button><br>
                 <button type="button" class="btn btn-success btn-sm" id="fileSavingSaveButton">Save Drawing</button><br><br>
@@ -81,7 +96,17 @@
                 <label class="form-check-label" for="showTransparentCheckbox">Show Alpha?</label>
                 <input type="checkbox" class="form-check-input" value="" id="showTransparentCheckbox" checked><br>
                 <label class="form-check-label" for="showBg">Show BG?</label>
-                <input type="checkbox" class="form-check-input" value="" id="showBg"><br><br>
+                <input type="checkbox" class="form-check-input" value="" id="showBg"><br>
+                <div class="bumpPadWrapper">
+                    <div class="bumpPad" aria-label="Bump drawing">
+                        <button id="bumpUp"    class="bumpBtn" title="Bump up">↑</button>
+                        <div class="bumpRow">
+                            <button id="bumpLeft"  class="bumpBtn" title="Bump left">←</button>
+                            <button id="bumpDown"  class="bumpBtn" title="Bump down">↓</button>
+                            <button id="bumpRight" class="bumpBtn" title="Bump right">→</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -233,6 +258,7 @@
     <script type="text/javascript" src="js/sg4_Mouse.js"></script>
     <script type="text/javascript" src="js/sg4_Inputs.js"></script>
     <script type="text/javascript" src="js/sg4_Files.js"></script>
+    <script type="text/javascript" src="js/sg4_Level.js"></script>
 </body>
 
 </html>

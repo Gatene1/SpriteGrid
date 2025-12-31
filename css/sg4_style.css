@@ -8,7 +8,7 @@ body {
     position: absolute;
     background-color: darkgreen;
     width: 54%;
-    height: 100%;
+    height: 97%;
     top: 0px;
     left: 2.60%;
     padding: 0px;
@@ -23,8 +23,10 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     flex-wrap: nowrap;
-    overflow: scroll;
     visibility: visible;
+    min-width: 0;
+    min-height: 0;
+
 }
 
 .divTitle2 {
@@ -364,6 +366,14 @@ body {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+
+.dimRow input[type="number"] {
+    width: 6rem;        /* primary sizing */
+    max-width: 100%;    /* safety for narrow containers */
 }
 
 .divInnerBottomFlexGrid {
@@ -375,7 +385,35 @@ body {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
+    min-width: 0;
+    min-height: 0;
+
 }
+
+.divInnerBottomFlexGrid > .input-group-sm {
+    max-width: 170px;
+}
+
+.divInnerBottomCanvasGrid {
+    width: 100%;
+    height: 100%;      /* or whatever fits your layout */
+    overflow: auto;
+    border: 1px solid #000;
+}
+
+.divInnerBottomCanvasGrid {
+    min-width: 0;
+    min-height: 0;
+}
+
+#canvasGrid {
+    display: block;
+}
+
+
+
+
+
 
 .divInnerBottomFlex4 {
     background-color: #ffffff;
@@ -447,7 +485,7 @@ body {
 }
 
 #cellSizeRangeText {
-    width: 150px;
+    width: 10rem;
     font-weight: bold;
 }
 
@@ -461,7 +499,7 @@ body {
 }
 
 #resetGridButton,
-#savePNGButton, #flipHorizontal, #flipVertical {
+#trimWhitespace, #flipHorizontal, #flipVertical {
     padding: 5px;
     width: fit-content;
     border: solid 2px black;
@@ -522,4 +560,102 @@ body {
 
 #copyColorCode {
     cursor: pointer;
+}
+
+/* --- Dimensions UI: vertical stack, no horizontal overflow --- */
+.dimRow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    max-width: 140px;   /* keeps it compact */
+}
+
+.dimGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dimLabel {
+    font-weight: bold;
+    line-height: 1.1;
+}
+
+.dimRow input[type="number"] {
+    padding: 4px 6px;
+    box-sizing: border-box;
+}
+
+/* chain button centered between W and H */
+#gridLockBtn.linkBtn {
+    align-self: flex-start;
+}
+
+/* Apply fills the column width */
+#gridApplyBtn {
+    width: 6rem;
+    box-sizing: border-box;
+}
+
+
+.linkBtn {
+    width:36px; height:28px;
+    border:1px solid #777;
+    border-radius:6px;
+    background:#eee;
+    cursor:pointer;
+}
+
+.linkBtn.linkOn {
+    background:#ddd;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+    transform: translateY(1px);
+}
+
+.linkBtn.linkOff {
+    background:#f5f5f5;
+    box-shadow:none;
+    transform:none;
+}
+
+
+
+/* Compact arrow-pad under the main grid canvas */
+.bumpPadWrapper {
+    display: flex;
+    width: auto;
+    align-content: flex-start;
+
+}
+
+.bumpPad{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    margin-top:6px;
+    user-select:none;
+}
+
+.bumpRow{
+    display:flex;
+    gap:4px;
+}
+
+.bumpBtn{
+    width:28px;
+    height:28px;
+    padding:0;
+    line-height:26px;
+    font-weight:bold;
+    border:2px solid #000;
+    border-radius:6px;
+    background:#f5f5f5;
+    cursor:pointer;
+}
+
+.bumpBtn:active{
+    transform: translateY(1px);
+    background:#e9e9e9;
 }

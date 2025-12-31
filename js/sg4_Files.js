@@ -1,11 +1,26 @@
+// This block of code will allow the SG4 object to exist regardless of the order of the <scripts> in the HTML file.
+/*window.SG4 ??= {};
+const SG4 = window.SG4;
+SG4.gatMeta ??= { createdUtc: null };
+SG4.utcNowIso ??= () => new Date().toISOString();*/
+// End Nullish Coalescing stuff
+
 const fileOptions = {
-    types: [{
-        description: "GAT Working Grid Files",
-        accept: {
-            "text/parameters": [".gat"],
+    types: [
+        { description: "GAT Working Grid Files",
+          accept: {
+                  "application/dialog-info+xml": [".gat"],
+          },
         },
-    }, ],
+
+        { description: "Portable Network Graphics",
+          accept: {
+              "image/png": [".png"],
+          },
+        },
+    ],
     excludeAcceptAllOption: true,
+    suggestedName: "WorkingGrid",
     multiple: false,
 };
 
@@ -35,42 +50,108 @@ function parseOpenFile() {
     let openFilePointer;
     let charAtGrid = 0;
 
-    // This is for the auto resize of the grid when opening legacy files. Before, it just loaded into the grid
-    // without changing, which would often lead to distortion.
-    grid = [];
+    // Reset (legacy code expects this, but DO NOT force grid to be a plain [])
+    // We'll let allocGrid / typed-array conversions handle it.
+    // grid = [];
 
+    const trimmed = openFileContents.trimStart();
+
+    // ----------------------------
+    // GAT v3 JSON (rectangles supported)
+    // ----------------------------
+    let obj = null;
+
+    try {
+        obj = tryParseGatV3Json(openFileContents);
+    } catch (e) {
+        alert(`Invalid GAT v3 JSON:\n\n${e.message}`);
+        return;
+    }
+
+    if (obj) {
+        displayLegacyAlert = false;
+
+        if (typeof gridWInput !== "undefined" && gridWInput) gridWInput.value = gridW;
+        if (typeof gridHInput !== "undefined" && gridHInput) gridHInput.value = gridH;
+        if (typeof gridSizeRangeText !== "undefined" && gridSizeRangeText) gridSizeRangeText.value = `${gridW} x ${gridH}`;
+
+        drawGrid();
+        return;
+    }
+
+
+    // ----------------------------
+    // Legacy formats (open only)
+    // ----------------------------
+
+    // Legacy hex format (no "GRID" header)
     if (openFileContents.substring(0, 4) !== "GRID") {
-        // The legacy grid file system
+        // Legacy grid file system
+        const temp = [];
         for (openFilePointer = 0; openFilePointer < openFileContents.length; openFilePointer++) {
             if (openFileContents.charAt(openFilePointer) == '#') {
-                grid[charAtGrid] = hex8ToUint32(openFileContents.substring(openFilePointer, openFilePointer + 7) + "FF");
+                temp[charAtGrid] = hex8ToUint32(openFileContents.substring(openFilePointer, openFilePointer + 7) + "FF");
                 openFilePointer += 6;
             } else {
-                grid[charAtGrid] = 0;
+                temp[charAtGrid] = 0;
             }
             charAtGrid++;
+        }
 
+        // Auto-resize square based on content length
+        const side = Math.sqrt(temp.length);
+        if (!Number.isInteger(side) || side <= 0) {
+            alert("Legacy GAT appears corrupted (length is not a perfect square).");
+            return;
         }
-        if (grid.length !== gridSize * gridSize) {
-            gridSize = Math.sqrt(grid.length);
-            gridSizeRange.value = gridSize;
-            gridSizeRangeText.value = `${gridSize} x ${gridSize}`;
-        }
+
+        gridW = side;
+        gridH = side;
+
+        // If you still track gridSize for UI elsewhere, keep it consistent
+        if (typeof gridSize !== "undefined") gridSize = side;
+
+        // Allocate typed grid + copy values
+        allocGrid(gridW, gridH, false);
+        grid.set(temp.map(v => v >>> 0));
+
+        // Sync UI
+        //if (typeof gridSizeRange !== "undefined") gridSizeRange.value = gridW;
+        //if (typeof gridSizeRangeText !== "undefined" && gridSizeRangeText) gridSizeRangeText.value = `${gridW} x ${gridH}`;
+        if (typeof gridWInput !== "undefined" && gridWInput) gridWInput.value = gridW;
+        if (typeof gridHInput !== "undefined" && gridHInput) gridHInput.value = gridH;
+
+
+        // Legacy files have no createdUtc, so stamp "now" on first v3 save
+        SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
+
         displayLegacyAlert = true;
-    } else {
-        // The new Uint32 typed array file ssytem
-        const newGridSize = parseInt(openFileContents.substring(5, 7));
-        grid = openFileContents.substring(7).split(",").map(str => parseInt(str, 10));
-
-        if (newGridSize != gridSize) {
-            gridSize = newGridSize;
-            gridSizeRange.value = gridSize;
-            gridSizeRangeText.value = `${gridSize} x ${gridSize}`;
-        }
-        displayLegacyAlert = false;
+        drawGrid();
+        return;
     }
+
+    // Legacy "GRID" typed array system (square only)
+    const newGridSize = parseInt(openFileContents.substring(5, 7));
+    const arr = openFileContents.substring(7).split(",").map(str => parseInt(str, 10) >>> 0);
+
+    gridW = newGridSize;
+    gridH = newGridSize;
+    if (typeof gridSize !== "undefined") gridSize = newGridSize;
+
+    allocGrid(gridW, gridH, false);
+    grid.set(arr);
+
+    // if (typeof gridSizeRange !== "undefined") gridSizeRange.value = gridW;
+    // if (typeof gridSizeRangeText !== "undefined") gridSizeRangeText.value = `${gridW} x ${gridH}`;
+    if (typeof gridWInput !== "undefined") gridWInput.value = gridW;
+    if (typeof gridHInput !== "undefined") gridHInput.value = gridH;
+
+    SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
+
+    displayLegacyAlert = true;
     drawGrid();
 }
+
 
 function parsePaletteFile() {
     let openFilePointer;
@@ -134,8 +215,7 @@ async function parseSSheetFile() {
         await parseSSheetFile_Legacy();
     }
     if (displayLegacyAlert) {
-        alert("It is recommended that you save this file before the release of SpriteGrid 4.0, because it is in the " +
-            "old (legacy) file format, and support will not be had in future releases from 4.0 on.");
+        alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
         displayLegacyAlert = false;
     }
 }
@@ -260,10 +340,10 @@ async function openSingleDrawing() {
     windowZRearrange(0);
     windowZRefresh();
     if (displayLegacyAlert) {
-        alert("It is recommended that you save this file before the release of SpriteGrid 4.0, because it is in the " +
-            "old (legacy) file format, and support will not be had in future releases from 4.0 on.");
+        alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
         displayLegacyAlert = false;
     }
+    firstDraw = true;
 }
 
 async function loadPalletteFile() {
@@ -274,8 +354,7 @@ async function loadPalletteFile() {
     openPaletteContents = "";
     colorTitleBar.innerHTML = "Color Selection - " + file.name + " &#x1F4C2;";
     if (displayLegacyAlert) {
-        alert("It is recommended that you save this file before the release of SpriteGrid 4.0, because it is in the " +
-            "old (legacy) file format, and support will not be had in future releases from 4.0 on.");
+        alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
         displayLegacyAlert = false;
     }
 }
@@ -308,15 +387,61 @@ async function savePalletteFile() {
     await saveFileWritableStream.close();
 }
 
+async function saveSingleDrawingAsPNG(handle) {
+    const canvas = document.createElement("canvas");
+    canvas.width = gridW;
+    canvas.height = gridH;
+
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(gridW, gridH);
+    const d = img.data;
+
+    for (let i = 0; i < grid.length; i++) {
+        const v = grid[i] >>> 0;
+        const di = i * 4;
+
+        d[di + 0] = (v >>> 24) & 0xff; // R
+        d[di + 1] = (v >>> 16) & 0xff; // G
+        d[di + 2] = (v >>> 8)  & 0xff; // B
+        d[di + 3] = (v)        & 0xff; // A
+    }
+
+    ctx.putImageData(img, 0, 0);
+
+    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+}
+
+
 async function saveSingleDrawing() {
     const saveFileHandle = await window.showSaveFilePicker(fileOptions);
-    const saveFileWritableStream = await saveFileHandle.createWritable();
-    const gridString = grid.join(",");
-    const stringBuilderForFile = "GRID" + "0" + String(gridSize).padStart(2, "0") + gridString;
-    await saveFileWritableStream.write(stringBuilderForFile);
-    titleBar.innerHTML = "Working Grid - " + saveFileHandle.name + " &#x1F4C2;";
-    await saveFileWritableStream.close();
+    const fileName = saveFileHandle.name.toLowerCase();
+
+    if (fileName.endsWith(".gat")) {
+        const saveFileWritableStream = await saveFileHandle.createWritable();
+
+        // Validate grid size before writing
+        const expectedLen = gridW * gridH;
+        if (!grid || grid.length !== expectedLen) {
+            alert(`Grid data length mismatch. Expected ${expectedLen}, got ${grid ? grid.length : 0}.`);
+            await saveFileWritableStream.close();
+            return;
+        }
+
+        // Build JSON (preserves SG4.gatMeta.createdUtc automatically)
+        const jsonString = buildGatV3JsonString(false);
+
+        await saveFileWritableStream.write(jsonString);
+        titleBar.innerHTML = "Working Grid - " + saveFileHandle.name + " &#x1F4C2;";
+        await saveFileWritableStream.close();
+    } else if (fileName.endsWith(".png")) {
+        await saveUint32GridAsPNG(saveFileHandle);
+    }
 }
+
+
 
 async function spriteSheetSave() {
     const sSheetFileHandle = await window.showSaveFilePicker(spriteSheetOptions);
@@ -340,4 +465,153 @@ async function spriteSheetSave() {
     await sSheetFileWritableStream.close();
     spriteGridBlob = [];
     fileData = null;
+}
+
+function buildGatV3JsonObject() {
+    const now = SG4.utcNowIso();
+
+    // Preserve createdUtc across saves
+    if (!SG4.gatMeta.createdUtc) SG4.gatMeta.createdUtc = now;
+
+    return {
+        format: "GAT",
+        version: 3,
+        meta: {
+            createdUtc: SG4.gatMeta.createdUtc,
+            updatedUtc: now
+        },
+        image: {
+            w: gridW,
+            h: gridH,
+            encoding: "RGBA32",
+            packing: "0xRRGGBBAA",
+            data: {
+                type: "u32",
+                values: Array.from(grid)
+            }
+        }
+    };
+}
+
+function buildGatV3JsonString(pretty = false) {
+    const obj = buildGatV3JsonObject();
+    return JSON.stringify(obj, null, pretty ? 2 : 0);
+}
+
+function tryParseGatV3Json(text) {
+    const trimmed = text.trimStart();
+    if (!trimmed.startsWith("{")) return null;
+
+    let obj;
+    try { obj = JSON.parse(text); }
+    catch { return null; }
+
+    if (!obj || obj.format !== "GAT" || obj.version !== 3) return null;
+
+    const img = obj.image;
+    if (!img || typeof img.w !== "number" || typeof img.h !== "number") {
+        throw new Error("GAT v3 JSON missing image.w/image.h");
+    }
+
+    const data = img.data;
+    if (!data || data.type !== "u32" || !Array.isArray(data.values)) {
+        throw new Error('GAT v3 JSON supports only image.data.type = "u32" right now');
+    }
+
+    const w = img.w | 0;
+    const h = img.h | 0;
+    if (w < 1 || h < 1) throw new Error("Invalid image dimensions");
+
+    if (data.values.length !== (w * h)) {
+        throw new Error(`GAT v3 JSON data length mismatch: expected ${w*h}, got ${data.values.length}`);
+    }
+
+    // Apply
+    allocGrid(w, h, false);
+    grid.set(data.values.map(v => v >>> 0));
+
+    // Persist createdUtc for future saves
+    SG4.gatMeta.createdUtc = obj.meta?.createdUtc || SG4.gatMeta.createdUtc || SG4.utcNowIso();
+
+    return obj;
+}
+
+async function saveWorkingGridAsPNG(handle) {
+    const w = gridW | 0;
+    const h = gridH | 0;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(w, h);
+    const d = img.data;
+
+    for (let i = 0; i < window.grid.length; i++) {
+        const v = window.grid[i] >>> 0;
+
+        // empty pixel
+        if (v === 0) {
+            const di = i * 4;
+            d[di + 0] = 0;
+            d[di + 1] = 0;
+            d[di + 2] = 0;
+            d[di + 3] = 0;
+            continue;
+        }
+
+        // Use your existing converter so PNG matches the app’s colors exactly.
+        const hex = uint32ToHex8(v);           // should be "#RRGGBBAA"
+        const [r, g, b, a] = hex8ToRgbaBytes(hex);
+
+        const di = i * 4;
+        d[di + 0] = r;
+        d[di + 1] = g;
+        d[di + 2] = b;
+        d[di + 3] = a;
+    }
+
+    ctx.putImageData(img, 0, 0);
+
+    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+}
+
+async function saveUint32GridAsPNG(handle, pixelsU32 = grid, w = gridW, h = gridH) {
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(w, h);
+    const d = img.data;
+
+    for (let i = 0; i < pixelsU32.length; i++) {
+        const v = pixelsU32[i] >>> 0;
+
+        const di = i * 4;
+        if (v === 0) {
+            d[di+0] = 0; d[di+1] = 0; d[di+2] = 0; d[di+3] = 0;
+            continue;
+        }
+
+        const hex = uint32ToHex8(v); // your “source of truth”
+        let s = hex.startsWith("#") ? hex.slice(1) : hex;
+        if (s.length === 6) s += "FF";
+
+        d[di+0] = parseInt(s.slice(0,2), 16) & 255;
+        d[di+1] = parseInt(s.slice(2,4), 16) & 255;
+        d[di+2] = parseInt(s.slice(4,6), 16) & 255;
+        d[di+3] = parseInt(s.slice(6,8), 16) & 255;
+    }
+
+    ctx.putImageData(img, 0, 0);
+
+    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
 }

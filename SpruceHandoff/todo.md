@@ -14,16 +14,17 @@
 \## Working Grid Window Mechanics
 
 * \[] Have bump arrows to "bump" the image on the Working Grid one pixel in the direction chosen. This should produce transparent pixels as new pixels.
-* \[] When resizing the grid, the grid should not clear by itself.
-* \[] Remove GridSize text box changing when scrolling through spritesheets.
-* \[✅] Add flip buttons to flip the grid drawing horizontally or vertically.
-* \[✅] Add a "Show Grid" checkbox to show a solid color background when the alpha channel's checkered bg isn't showing for chroma.
+* \[✅] When resizing the grid, the grid should not clear by itself.
+* \[✅] Allow uneven dimensions of the grid.
+* \[✅] Implement +/- text boxes for the width and height \& accompanying submit button (maybe make it realtime adding?).
+* \[✴️] Add a "Trim Whitespace" button and its functionality to make the grid form to the sprite.
 
 
 
 \## Preview Window Mechanics
 
 * \[✴️] When changing the magnification on the preview window, clipping can currently occur, I need to fix that.
+* \[] When the "Show BG" checkbox is checked, make the preview Window also show the background.
 
 
 
@@ -54,6 +55,10 @@
 * \[] When scrolling in the Level editor window, only what's visible onscreen \& changed should be drawn on the next frame.
 * \[] Add ability to move sprites from one grid cell to the next (just like in the Spritesheet window mechanics above).
 * \[] Add functionality to the Save and Erase buttons.
+* \[] Add ability to change the height and width of a single screen of the level.
+* \[] Add magnifying buttons to be able to zoom out and zoom in to see more/less of the level.
+* \[] Add button to add a screen to the north, east, south, west
+* \[] Add functionality to scroll throughout the level, instead of just one screen.
 
 
 
@@ -61,6 +66,9 @@
 
 * \[] Be able to save window formation locations (layout saving).
 * \[❓] Have an Undo function (Maybe have a history of 4 deep?)
+* \[✅] make the gat-spec.txt file for information about the .gat file type.
+* \[] make the gss-spec.txt file for information about the .gss file type.
+* \[] make the gle-spec.txt file for information about the .gle file type.
 
 
 

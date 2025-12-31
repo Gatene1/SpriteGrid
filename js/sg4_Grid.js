@@ -5,20 +5,56 @@ function changeCellSize() {
 
 function changeGridSize() {
     gridSizeRangeText.value = gridSizeRange.value + " X " + gridSizeRange.value;
-    gridSize = gridSizeRange.value;
+
+    //gridSize = gridSizeRange.value;
+    gridSize = gridW * gridH;
     //grid = new Uint32Array(gridSize * gridSize);
     fillArrayWithZeroes();
     refreshGridOutput();
 }
 
+function gridIndex(x, y) {
+    return (y * gridW) + x;
+}
+
+function allocGrid(newW, newH, preserve = true) {
+    newW = Math.max(1, newW | 0);
+    newH = Math.max(1, newH | 0);
+
+    const next = new Uint32Array(newW * newH);
+
+    if (preserve && grid && grid.length) {
+        const copyW = Math.min(gridW, newW);
+        const copyH = Math.min(gridH, newH);
+        for (let y = 0; y < copyH; y++) {
+            const srcRow = y * gridW;
+            const dstRow = y * newW;
+            for (let x = 0; x < copyW; x++) {
+                next[dstRow + x] = grid[srcRow + x];
+            }
+        }
+    }
+
+    gridW = newW;
+    gridH = newH;
+    grid = next;
+
+    // Update title / UI as needed
+    if (typeof titleBar !== "undefined" && titleBar) {
+        titleBar.innerHTML = `Working Grid - Unknown.gat &#x1F4C2; (${gridW}x${gridH})`;
+    }
+}
+
+
 function fillArrayWithZeroes() {
-    //let i;
+    /*//let i;
     //grid = [];
     grid = new Uint32Array(gridSize * gridSize);
     // for (i = 0; i < gridSize * gridSize; i++) {
     //     grid.push("0");
     // }
-    titleBar.innerHTML = "Working Grid - Unknown.gat &#x1F4C2;";
+    titleBar.innerHTML = "Working Grid - Unknown.gat &#x1F4C2;";*/
+    allocGrid(gridW, gridH, false); // same dims, clears
 }
 
 function fillSpriteGridArrayWithNulls() {
@@ -35,13 +71,13 @@ function refreshGridOutput() {
 
     // This begins with 0, and ends in - 1, because I want the last element of the grid[] array to not have a ","
     // after it.
-    for (i = 0; i < gridSize * gridSize - 1; i++) {
+    for (i = 0; i < gridW * gridH - 1; i++) {
         //gridOutput.value = gridOutput.value + "\"" + grid[i] + "\", ";
         gridOutput.value = gridOutput.value + grid[i] + ", ";
     }
     // This will show the last value of the grid[] array, and end the output with a "];".
     //gridOutput.value = gridOutput.value + "\"" + grid[gridSize * gridSize - 1] + "\"  ];";
-    gridOutput.value = gridOutput.value + grid[gridSize * gridSize - 1] + "  ];";
+    gridOutput.value = gridOutput.value + grid[gridW * gridH - 1] + "  ];";
 
     return new Promise((resolve, reject) => {
         // async stuff here
@@ -60,24 +96,33 @@ function zeroOutRefresh() {
 
 function changeCellColor(e) {
     lmbDown = true;
-    if (Math.floor(mouseXGrid / cellSize) <= gridSize - 1 && !rmbDown) {
-        //grid[mouseToGrid] = currColor == "#f5f5f5" ? "0" : currColor;
-        //alert ("r:" + colorPicker.color.rgba.r + " g:" + colorPicker.color.rgba.g + " b:" + colorPicker.color.rgba.b + " a:" + colorPicker.color.rgba.a);
-        grid[mouseToGrid] = currColor == "#f5f5f580" ? 0 : rgbToUint(colorPicker.color.rgba);
-        //alert (grid[mouseToGrid]);
-        drawGridFromRequest(mouseToGrid);
-        refreshGridOutput();
-    }
+
+    const gx = Math.floor(mouseXGrid / cellSize);
+    const gy = Math.floor(mouseYGrid / cellSize);
+    if (gx < 0 || gy < 0 || gx >= gridW || gy >= gridH) return;
+    if (rmbDown) return;
+
+    const idx = gridIndex(gx, gy);
+    grid[idx] = currColor == "#f5f5f580" ? 0 : rgbToUint(colorPicker.color.rgba);
+
+    drawGridFromRequest?.(idx);
+    refreshGridOutput?.();
 }
 
 function RMB() {
     rmbDown = true;
-    if (Math.floor(mouseXGrid / cellSize) <= gridSize - 1) {
-        grid[mouseToGrid] = 0;
-        refreshGridOutput();
-        drawGridFromRequest(mouseToGrid);
-    }
+
+    const gx = Math.floor(mouseXGrid / cellSize);
+    const gy = Math.floor(mouseYGrid / cellSize);
+    if (gx < 0 || gy < 0 || gx >= gridW || gy >= gridH) return;
+
+    const idx = gridIndex(gx, gy);
+    grid[idx] = 0;
+
+    refreshGridOutput?.();
+    drawGridFromRequest?.(idx);
 }
+
 
 function LMBRelease() {
     lmbDown = false;
@@ -164,4 +209,61 @@ function showBgFunc() {
     showBgBool = !showBgBool;
     bgColorChoose = showBgBool ? colorPicker.color.rgbaString : 4294967295;
     firstDraw = true;
+}
+
+function applyNewGridDimensions() {
+    const w = parseInt(gridWInput.value, 10);
+    const h = parseInt(gridHInput.value, 10);
+    allocGrid(w, h, true);   // preserve pixels (crop/pad)
+    refreshGridOutput?.();
+
+    if (gridW * gridH > 4096) {
+        showTheGrid = false;
+        showGridCheckbox.checked = false;
+    }
+
+    syncCanvasToGrid();
+    requestGridFullRedraw();
+}
+
+function syncCanvasToGrid() {
+    const wPx = gridW * cellSize;
+    const hPx = gridH * cellSize;
+
+    canvasGrid.width  = wPx;
+    canvasGrid.height = hPx;
+
+    canvasGrid.style.width  = wPx + "px";
+    canvasGrid.style.height = hPx + "px";
+}
+
+function ensureGridBackbuffer(w, h) {
+    if (gridImageData && gridImageData.width === w && gridImageData.height === h) return;
+    gridImageData = ctxGrid.createImageData(w, h);
+    gridImageU32  = new Uint32Array(gridImageData.data.buffer);
+}
+
+function redrawGridFast() {
+    ensureGridBackbuffer(gridW, gridH);
+
+    for (let i = 0; i < grid.length; i++) {
+        const v = grid[i] >>> 0;
+        if (v === 0) {
+            gridImageU32[i] = 0; // transparent
+        } else {
+            const hex = uint32ToHex8(v);           // your “truth”
+            gridImageU32[i] = hex8ToAABBGGRR(hex); // canvas order
+        }
+    }
+
+    // Paint pixels 1:1 onto a tiny offscreen-sized surface
+    // BUT we want them scaled up to cellSize, so…
+    ctxGrid.putImageData(gridImageData, 0, 0);
+
+    // Scale to your visible canvas using drawImage
+    // You’ll need an offscreen canvas for the 1:1 image
+}
+
+function requestGridFullRedraw() {
+    gridFullDirty = true;
 }

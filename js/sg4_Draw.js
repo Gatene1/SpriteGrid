@@ -1,10 +1,35 @@
+function requestRedraw() {
+    if (gridDirty) return;
+    gridDirty = true;
+}
+
 function drawAll() {
     // Each if-statement will check to see if this is the initial drawing of WebApp or if the Window is active and
     // the Window is visible, then draw its contents.
     if (isWindowActive(0, true)) {
-        if (firstDraw) { drawGrid(); }
-        //drawGridFromRequest();
+        if (firstDraw || gridDirty) {
+            syncCanvasToGrid();  // canvas size might change after Apply/Load/CellSize
+            drawGrid();          // expensive
+            gridDirty = false;
+        } else {
+            drawGridFromRequest();
+        }
+
+        if (gridFullDirty) {
+            syncCanvasToGrid();
+            drawGrid();              // full redraw
+            gridFullDirty = false;
+            dirtyCells.clear();
+        } else if (dirtyCells.size) {
+            // partial redraws
+            for (const idx of dirtyCells) drawGridFromRequest(idx);
+            dirtyCells.clear();
+        }
+
         drawPreviewUpdate();
+
+        //drawGridFast();
+
     }
     if (isWindowActive(2, true)){
         drawColorSquares();
@@ -17,6 +42,8 @@ function drawAll() {
     }
 
     if (firstDraw) firstDraw = false;
+
+
 
     //alert (currColor);
 }
@@ -93,75 +120,81 @@ function drawSquare (x, y, width, height, stroke, fillColor, whichCanvas = 0,
 
 // Helper function for the drawGrid methods below, by Sprucey-Poo :-*
 function getCellXY(index, border = true) {
-    let row = Math.floor(index / gridSize);
-    let col = index % gridSize;
+    const row = Math.floor(index / gridW);
+    const col = index % gridW;
+
+    const inset = border ? 2 : 0;
     return {
-        x: col * cellSize + 2,
-        y: row * cellSize + 2
+        x: col * cellSize + inset,
+        y: row * cellSize + inset
     };
 }
 
 function drawGrid() {
-    let i, j;
-    let currCell, currCellColor;
+    let x, y;
+    let idx, currCellColor;
 
-    canvasGridCTX.clearRect(0, 0, 775, 775);
+    // Keep this if other UI code expects it, but it is NOT used for indexing
+    gridSize = gridW * gridH;
+
+    canvasGridCTX.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
 
     drawBg();
 
-    for (i = 0; i < gridSize; i++) {
-        for (j = 0; j < gridSize; j++) {
-            currCell = (i * gridSize) + j;
+    for (y = 0; y < gridH; y++) {
+        for (x = 0; x < gridW; x++) {
+            idx = (y * gridW) + x; // FIX: proper row-major index
 
-            let { x, y } = getCellXY(currCell, showTheGrid);
+            const posX = x * cellSize + 2;
+            const posY = y * cellSize + 2;
 
-            if (grid[currCell] == 0) {
-                if (!showTheGrid && !showAlpha) {
-                    continue;
-                }
+            if (grid[idx] === 0) {
+                if (!showTheGrid && !showAlpha) continue;
+
                 if (showTheGrid) {
                     currCellColor = "rgba(245, 245, 245, .5)";
-                    drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+                    drawSquare(posX, posY, cellSize, cellSize, true, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
                 } else {
                     currCellColor = "rgba(245, 245, 245, 0)";
-                    drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
+                    drawSquare(posX, posY, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
                 }
             } else {
-                currCellColor = uIntToRgbaString(grid[currCell]);
-                //alert (currCellColor);
-                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+                currCellColor = uIntToRgbaString(grid[idx]);
+                drawSquare(posX, posY, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
             }
-
         }
     }
 }
+
 
 function drawGridFromRequest(gridElement) {
     /*let y = Math.floor(gridElement / gridSize) * cellSize;
     let col = gridElement - ((y / cellSize) * gridSize);
     let x = col * cellSize;*/
+    if (gridElement < 0 || gridElement >= grid.length) return;
+
     let { x, y } = getCellXY(gridElement);
-    let xyMax = gridSize * cellSize;
+
     let currCellColor;
 
-    if (x <= xyMax && y < xyMax) {
-        canvasGridCTX.clearRect(x, y, cellSize, cellSize);
-        if (grid[gridElement] == 0) {
-            if (!showTheGrid && !showAlpha) {
-                currCellColor = "rgba(255, 255, 255, .5)";
-                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
-            }
-            if (showTheGrid) {
-                currCellColor = "rgba(245, 245, 245, .5)";
-                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
-                //drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
-            } else {
-                currCellColor = "rgba(245, 245, 245, 0)";
-                drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
-            }
-        } else {
-            drawSquare(x, y, cellSize, cellSize, showTheGrid, uIntToRgbaString(grid[gridElement]), 0, GRID_BORDER_COLOR, true, showAlpha)
+    canvasGridCTX.clearRect(x, y, cellSize + 1, cellSize + 1);
+
+
+    if (grid[gridElement] == 0) {
+        if (!showTheGrid && !showAlpha) {
+            currCellColor = "rgba(255, 255, 255, .5)";
+            drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
         }
+        if (showTheGrid) {
+            currCellColor = "rgba(245, 245, 245, .5)";
+            drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
+            //drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+        } else {
+            currCellColor = "rgba(245, 245, 245, 0)";
+            drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
+        }
+    } else {
+        drawSquare(x, y, cellSize, cellSize, showTheGrid, uIntToRgbaString(grid[gridElement]), 0, GRID_BORDER_COLOR, true, showAlpha)
     }
 }
 
@@ -221,16 +254,15 @@ function drawColorSquares() {
 function drawPreviewUpdate() {
     let i, j;
     let localCurrCell, currCellColor;
-    let prevGridSize = gridSize * gridSize;
+    let prevGridSize = gridW * gridH;
 
     previewWindowCTX.clearRect(0, 0, 300, 300);
     //alert ("GridSize = " + gridSize);
 
-    for (i = 0; i < gridSize; i++) {
-        for (j = 0; j < gridSize; j++) {
-            localCurrCell = (i * gridSize) + j;
+    for (i = 0; i < gridH; i++) {
+        for (j = 0; j < gridW; j++) {
+            localCurrCell = (i * gridW) + j; // FIX
 
-            // If the color to draw is 0, then make it white, to match the background of the Preview Window.
             if (grid[localCurrCell] == 0) {
                 currCellColor = 4294967295;
             } else {
@@ -241,6 +273,7 @@ function drawPreviewUpdate() {
                 uint32ToHex8(currCellColor), 3);
         }
     }
+
 }
 
 function drawSpriteCanvasUpdate() {
@@ -481,8 +514,8 @@ function debugAction() {
 
 function flipHorizontally() {
     const flipped = new Uint32Array(grid.length);
-    const gridWidth = gridSize;
-    const gridHeight = gridSize;
+    const gridWidth = gridW;
+    const gridHeight = gridH;
 
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
@@ -502,8 +535,8 @@ function flipHorizontally() {
 
 function flipVertically() {
     const flipped = new Uint32Array(grid.length);
-    const gridWidth = gridSize;
-    const gridHeight = gridSize;
+    const gridWidth = gridW;
+    const gridHeight = gridH;
 
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
@@ -521,9 +554,45 @@ function flipVertically() {
 
 function drawBg() {
     if (showBgBool) {
-        drawSquare(0, 0, gridSize * cellSize + 4, gridSize * cellSize + 4, false, bgColorChoose, 0, GRID_BORDER_COLOR, true, false);
+        drawSquare(0, 0, gridW * cellSize + 4, gridH * cellSize + 4, false, bgColorChoose, 0, GRID_BORDER_COLOR, true, false);
     } else {
-        canvasGridCTX.clearRect(0, 0, gridSize * cellSize + 4, gridSize * cellSize + 4);
+        canvasGridCTX.clearRect(0, 0, canvasGrid.width * cellSize + 4, canvasGrid.height * cellSize + 4);
+
     }
 
+}
+
+function ensureImageBackbuffer(w, h){
+    if (imgData && imgData.width === w && imgData.height === h) return;
+    imgData = ctx.createImageData(w, h);
+    imgU32 = new Uint32Array(imgData.data.buffer);
+}
+
+function redrawWholeGridFast(){
+    ensureImageBackbuffer(gridW, gridH);
+
+    // IMPORTANT: this assumes your Uint32 packing matches the browser's endianness needs.
+    // Since your PNG export proved your pack is consistent, you may need to swizzle here.
+    // If colors are wrong, we’ll add a tiny swizzle step.
+    for (let i=0;i<window.grid.length;i++){
+        imgU32[i] = packToCanvasRGBA(window.grid[i]); // see below
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+}
+
+function packToCanvasRGBA(v){
+    // v is your 0xRRGGBBAA
+    // ImageData Uint32 wants 0xAABBGGRR on little-endian systems (which is basically all PCs).
+    v >>>= 0;
+    const r = (v >>> 24) & 255;
+    const g = (v >>> 16) & 255;
+    const b = (v >>>  8) & 255;
+    const a = (v       ) & 255;
+    return (a<<24) | (b<<16) | (g<<8) | r;
+}
+
+function requestCellRedraw(idx) {
+    // only queue if not doing full redraw anyway
+    if (!gridFullDirty) dirtyCells.add(idx);
 }

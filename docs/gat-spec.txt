@@ -1,0 +1,122 @@
+SpriteGrid File Spec — .gat (Grid Artwork)
+==========================================
+
+Purpose
+-------
+A .gat file stores a single pixel-art grid (one drawing), using an engine-agnostic
+representation. SpriteGrid v4+ saves .gat files as JSON (v3+).
+
+File Type
+---------
+Extension: .gat
+Encoding: UTF-8 text
+Format: JSON object
+
+Versioning
+----------
+- SpriteGrid writes: version 3 JSON only.
+- SpriteGrid may open legacy formats (v1/v2) but will not re-save in legacy format.
+
+Top-Level Object
+----------------
+Required fields:
+
+1) format (string)
+   Must be "GAT".
+
+2) version (number)
+   For JSON format, must be >= 3.
+
+3) meta (object)
+   Required keys:
+   - createdUtc (string, ISO 8601 UTC)
+   - updatedUtc (string, ISO 8601 UTC)
+
+4) image (object)
+   Required keys:
+   - w (number)  Width in pixels
+   - h (number)  Height in pixels
+   - encoding (string) Must be "RGBA32"
+   - packing (string) Must be "0xRRGGBBAA"
+   - data (object) see Data Section
+
+Data Section
+------------
+image.data is an object describing the pixel payload.
+
+Required keys:
+- type (string)
+- values (array of numbers) if type is "u32" (unsigned 32-bit integers).
+
+Supported types (v3):
+1) type = "u32"
+   - values: array<number>
+   - length must equal w*h
+   - each entry is an unsigned 32-bit integer storing one pixel packed as RGBA:
+     0xRRGGBBAA (RR in highest byte, AA in lowest byte)
+
+Notes on Color Packing
+----------------------
+Packing: 0xRRGGBBAA
+- RR = red   (0-255)
+- GG = green (0-255)
+- BB = blue  (0-255)
+- AA = alpha (0-255)
+
+Empty/transparent pixel should be 0x00000000.
+
+Reserved types (future)
+-----------------------
+SpriteGrid may add additional payload encodings in future versions.
+
+Examples of reserved types:
+- type = "base64_rgba8"
+  - value: string (Base64 of raw RGBA bytes, length = w*h*4)
+
+- type = "rle_u32"
+  - runs: array of [count, value] pairs representing run-length encoding
+
+Readers should ignore unknown fields but must reject unknown data.type values
+unless explicitly supported.
+
+
+Validation Rules
+----------------
+- JSON must parse successfully.
+- format must equal "GAT".
+- version must be a number >= 3.
+- image.w and image.h must be positive integers.
+- image.encoding must equal "RGBA32".
+- image.packing must equal "0xRRGGBBAA".
+- image.data.type must equal "u32".
+- image.data.values length must equal image.w * image.h.
+
+Implementation Notes (SpriteGrid)
+---------------------------------
+- Internal working buffer is Uint32-like values per pixel.
+- When saving:
+  - createdUtc should be preserved if an existing v3 file was opened;
+    otherwise set createdUtc = now.
+  - updatedUtc must always be set to now.
+
+SpriteGrid Implementation Notes
+------------------------------
+- SpriteGrid supports rectangular grids (w != h).
+- Internal storage remains a flat pixel array of length w*h.
+- Any UI or math that previously assumed square must use:
+  index = x + (y * w)
+  and bounds checks against w/h.
+
+Examples
+--------
+Minimal example (2x2):
+{
+  "format":"GAT",
+  "version":3,
+  "meta":{"createdUtc":"2025-12-24T00:00:00Z","updatedUtc":"2025-12-24T00:00:00Z"},
+  "image":{
+    "w":2,"h":2,
+    "encoding":"RGBA32","packing":"0xRRGGBBAA",
+    "data":{"type":"u32","values":[0,4294967295,4294967295,0]}
+  }
+}

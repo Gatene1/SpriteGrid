@@ -2,32 +2,29 @@ Folder PATH listing for volume Data
 Volume serial number is 6EF4-FA24
 D:.
 ¦   .gitattributes
+¦   .gitignore
 ¦   CHANGELOG.md
 ¦   filemap.txt
-¦   gpt-spec.txt
 ¦   LICENSE
 ¦   README.md
-¦   sg3.js
-¦   sg3_Classes.js
-¦   sg3_Colors.js
-¦   sg3_Draw.js
-¦   sg3_Files.js
-¦   sg3_Grid.js
-¦   sg3_Inputs.js
-¦   sg3_Mouse.js
-¦   sg3_style.css
-¦   sg3_Tools.js
-¦   sg3_Window - Copy.js
-¦   sg3_Window.js
-¦   SpriteGrid3.html
+¦   SpriteGrid4.html
+¦   SpriteGrid4.zip
 ¦   
 +---.idea
 ¦       .gitignore
-¦       jpa-buddy.xml
 ¦       misc.xml
 ¦       modules.xml
-¦       SpriteGrid3.iml
+¦       SpriteGrid.iml
+¦       vcs.xml
 ¦       workspace.xml
+¦       
++---css
+¦       sg4_style.css
+¦       
++---docs
+¦       CHANGELOG.md
+¦       gat-spec.txt
+¦       gpt-spec.txt
 ¦       
 +---Drawing Files
 ¦       arrows.gpt
@@ -88,6 +85,19 @@ D:.
 ¦       test_3.3.gss
 ¦       tryPadding.png
 ¦       underground.gss
+¦       
++---js
+¦       sg4.js
+¦       sg4_Classes.js
+¦       sg4_Colors.js
+¦       sg4_Draw.js
+¦       sg4_Files.js
+¦       sg4_Grid.js
+¦       sg4_Inputs.js
+¦       sg4_Level.js
+¦       sg4_Mouse.js
+¦       sg4_Tools.js
+¦       sg4_Window.js
 ¦       
 +---SpruceHandoff
         DiffNote.txt

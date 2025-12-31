@@ -547,7 +547,7 @@ function gridUpdateMousePos(e) {
     mouseXGrid = e.clientX - rect.left - root.scrollLeft;
     mouseYGrid = e.clientY - rect.top - root.scrollTop;
 
-    mouseToGrid = (Math.floor(mouseYGrid / cellSize) * gridSize) + Math.floor(mouseXGrid / cellSize);
+    mouseToGrid = (Math.floor(mouseYGrid / cellSize) * gridH) + Math.floor(mouseXGrid / cellSize);
 
 
 
@@ -571,11 +571,12 @@ function gridUpdateMousePosColorChoose(e) {
     mouseXSpriteGrid = e.clientX - rect.left - root.scrollLeft;
     mouseYSpriteGrid = e.clientY - rect.top - root.scrollTop;
 
-    mouseToGrid = (Math.floor(mouseYSpriteGrid / cellSize) * gridSize) + Math.floor(mouseXSpriteGrid / cellSize);
+    mouseToGrid = (Math.floor(mouseYSpriteGrid / cellSize) * gridH) + Math.floor(mouseXSpriteGrid / cellSize);
 
     //drawText (Math.floor(mouseXSpriteGrid) + ", " + Math.floor(mouseYSpriteGrid), mouseXSpriteGrid, mouseYSpriteGrid, 8, "black", 2)
 
-    gridSizeRangeText.value = gridSizeRange.value + " X " + gridSizeRange.value;
+    //gridSizeRangeText.value = gridSizeRange.value + " X " + gridSizeRange.value;
+
     cSizeRangeText.value = cellSizeRange.value + " Pixels";
 
     // If the LMB is pressed down for drag painting.

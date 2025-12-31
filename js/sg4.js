@@ -27,14 +27,28 @@ var cellSizeRange = document.getElementById("cellSizeRangeSlider");
 var gridSizeRangeText = document.getElementById("gridSizeRangeText");
 var cSizeRangeText = document.getElementById("cellSizeRangeText");
 var gridOutput = document.getElementById("gridOutput");
-var savePNGButton = document.getElementById("savePNGButton");
+var trimWhitespace = document.getElementById("trimWhitespace");
 window.redrawQueued = false;
 window.BgColor = 4294967295;
 window.showBgBool = false;
 
+let gridW = 16;
+let gridH = 16;
+let imgData = null;
+let imgU32 = null;
+
+let gridImageData = null;
+let gridImageU32 = null;
+
+let gridDirty = true;
+let gridFullDirty = true;
+const dirtyCells = new Set();
+
 //var grid = ["0"];
-window.grid = new Uint32Array(gridSize * gridSize);
-window.gridTemp = new Uint32Array(gridSize * gridSize);
+// window.grid = new Uint32Array(gridSize * gridSize);
+window.grid = new Uint32Array(gridW * gridH);  // 0 = transparent or empty.
+window.gridTemp = new Uint32Array(gridW * gridH);
+
 var showTheGrid = true;
 var showTheLevelGrid = true;
 var gridCopy = ["0"];
@@ -119,6 +133,28 @@ window.showAlpha = true;
 window.flipHorizontal = document.getElementById("flipHorizontal");
 window.flipVertical = document.getElementById("flipVertical");
 window.showBg = document.getElementById("showBg");
+const bumpUp    = document.getElementById("bumpUp");
+const bumpDown  = document.getElementById("bumpDown");
+const bumpLeft  = document.getElementById("bumpLeft");
+const bumpRight = document.getElementById("bumpRight");
+
+//let dimsLinked = true;
+let gridDimsLocked = true;
+
+window.SG4 ??= {};
+const SG4 = window.SG4;
+SG4.gatMeta ??= { createdUtc: null };
+
+SG4.utcNowIso = function utcNowIso() {
+    return new Date().toISOString();
+};
+
+const gridWInput = document.getElementById("gridWInput");
+const gridHInput = document.getElementById("gridHInput");
+const gridLockBtn = document.getElementById("gridLockBtn");
+const gridApplyBtn = document.getElementById("gridApplyBtn");
+
+
 
 // Vars for Second Window (Preview)
 var prevLmbDown = false;
@@ -251,9 +287,9 @@ window.levelDebugging = document.getElementById("levelDebugging");
 
 window.onload = function() {
     //Web App Code
-    gridSizeRange.value = gridSize;
+    // gridSizeRange.value = gridSize;
     cellSizeRange.value = cellSize;
-    gridSizeRangeText.value = gridSize + " X " + gridSize;
+    // gridSizeRangeText.value = gridSize + " X " + gridSize;
     cSizeRangeText.value = cellSize + " Pixels";
 
     fillArrayWithZeroes();
@@ -309,11 +345,11 @@ window.onload = function() {
     divSide6.addEventListener('mousedown', function() { openWindow(5);
         windowZRearrange(5);
         windowZRefresh(); }, true);
-    /*divSide7.addEventListener('mousedown', function() { openWindow(6);
+    divSide7.addEventListener('mousedown', function() { openWindow(6);
         windowZRearrange(6);
-        windowZRefresh(); }, true);*/
-    cellSizeRange.addEventListener('change', () => { changeCellSize(); drawGrid(); }, false);
-    gridSizeRange.addEventListener('change', () => { changeGridSize(); drawGrid(); }, false);
+        windowZRefresh(); }, true);
+    cellSizeRange.addEventListener('change', () => { changeCellSize(); syncCanvasToGrid(); drawGrid(); }, false);
+    // gridSizeRange.addEventListener('change', () => { changeGridSize(); drawGrid(); }, false);
 
     // Listeners for the Color Iro.js
     colorPicker.on('color:change', function(color) {
@@ -367,12 +403,36 @@ window.onload = function() {
     resetGridButton.addEventListener('mousedown', zeroOutRefresh, true);
     showGridCheckbox.addEventListener('change', turnGridOnOff, true);
     showTransparentCheckbox.addEventListener('change', function() { showAlpha = !showAlpha; firstDraw = true; }, true);
-    savePNGButton.addEventListener('click', saveGridAsPNG, true);
+    trimWhitespace.addEventListener('click', trimTheWhitespace, true);
     fileSavingOpenButton.addEventListener('click', openSingleDrawing, true);
     fileSavingSaveButton.addEventListener('click', saveSingleDrawing, true);
     flipHorizontal.addEventListener('click', flipHorizontally);
     flipVertical.addEventListener('click', flipVertically);
     showBg.addEventListener('change', showBgFunc);
+
+    gridLockBtn.addEventListener("click", () => {
+        gridDimsLocked = !gridDimsLocked;
+        gridLockBtn.classList.toggle("linkOn", gridDimsLocked);
+        gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
+        gridLockBtn.setAttribute("aria-pressed", gridDimsLocked ? "true" : "false");
+    });
+
+    gridWInput.addEventListener("input", () => {
+        if (gridDimsLocked) gridHInput.value = gridWInput.value;
+    });
+
+    gridHInput.addEventListener("input", () => {
+        if (gridDimsLocked) gridWInput.value = gridHInput.value;
+    });
+
+    gridApplyBtn.addEventListener("click", applyNewGridDimensions, true);
+    bumpUp?.addEventListener("click",    () => bumpGrid(0, -1), true);
+    bumpDown?.addEventListener("click",  () => bumpGrid(0,  1), true);
+    bumpLeft?.addEventListener("click",  () => bumpGrid(-1, 0), true);
+    bumpRight?.addEventListener("click", () => bumpGrid( 1, 0), true);
+
+    const offscreenCanvas = document.createElement("canvas");
+    const offscreenCtx = offscreenCanvas.getContext("2d");
 
     // Listeners for Second Window (Preview)
     prevLittleWindow.addEventListener('mousedown', prevLittleWindowClick, false);
