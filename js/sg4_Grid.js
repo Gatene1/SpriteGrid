@@ -1,3 +1,11 @@
+function requestGridOutputRefresh() {
+    clearTimeout(gridOutputTimer);
+    gridOutputTimer = setTimeout(() => {
+        refreshGridOutput?.();
+    }, 150);
+}
+
+
 function changeCellSize() {
     cSizeRangeText.value = cellSizeRange.value + " Pixels";
     cellSize = cellSizeRange.value;
@@ -78,23 +86,18 @@ function refreshGridOutput() {
     // This will show the last value of the grid[] array, and end the output with a "];".
     //gridOutput.value = gridOutput.value + "\"" + grid[gridSize * gridSize - 1] + "\"  ];";
     gridOutput.value = gridOutput.value + grid[gridW * gridH - 1] + "  ];";
-
-    return new Promise((resolve, reject) => {
-        // async stuff here
-        setTimeout(() => {
-            // done
-            resolve ("Refreshed!");
-        }, 100);
-    });
 }
 
 function zeroOutRefresh() {
     fillArrayWithZeroes();
-    refreshGridOutput();
-    drawGrid();
+    clearOffscreen();
+    requestGridFullRedraw();
+    redrawGridOverlay();
+    void refreshGridOutput();
+    //drawGrid();
 }
 
-function changeCellColor(e) {
+function changeCellColor() {
     lmbDown = true;
 
     const gx = Math.floor(mouseXGrid / cellSize);
@@ -103,10 +106,13 @@ function changeCellColor(e) {
     if (rmbDown) return;
 
     const idx = gridIndex(gx, gy);
-    grid[idx] = currColor == "#f5f5f580" ? 0 : rgbToUint(colorPicker.color.rgba);
+    const next = (currColor == "#f5f5f580") ? 0 : rgbToUint(colorPicker.color.rgba);
 
-    drawGridFromRequest?.(idx);
-    refreshGridOutput?.();
+    if (grid[idx] === next) return;
+
+    grid[idx] = next;
+    requestCellRedraw(idx);
+    pendingGridOutputRefresh = true;
 }
 
 function RMB() {
@@ -117,11 +123,15 @@ function RMB() {
     if (gx < 0 || gy < 0 || gx >= gridW || gy >= gridH) return;
 
     const idx = gridIndex(gx, gy);
-    grid[idx] = 0;
+    const next = 0;
 
-    refreshGridOutput?.();
-    drawGridFromRequest?.(idx);
+    if (grid[idx] === next) return;
+
+    grid[idx] = next;
+    requestCellRedraw(idx);
+    pendingGridOutputRefresh = true;
 }
+
 
 
 function LMBRelease() {
@@ -224,6 +234,7 @@ function applyNewGridDimensions() {
 
     syncCanvasToGrid();
     requestGridFullRedraw();
+    redrawGridOverlay();
 }
 
 function syncCanvasToGrid() {
@@ -232,10 +243,16 @@ function syncCanvasToGrid() {
 
     canvasGrid.width  = wPx;
     canvasGrid.height = hPx;
-
     canvasGrid.style.width  = wPx + "px";
     canvasGrid.style.height = hPx + "px";
+
+    // overlay canvas matches exactly
+    canvasGridLines.width  = wPx;
+    canvasGridLines.height = hPx;
+    canvasGridLines.style.width  = wPx + "px";
+    canvasGridLines.style.height = hPx + "px";
 }
+
 
 function ensureGridBackbuffer(w, h) {
     if (gridImageData && gridImageData.width === w && gridImageData.height === h) return;
@@ -266,4 +283,79 @@ function redrawGridFast() {
 
 function requestGridFullRedraw() {
     gridFullDirty = true;
+}
+
+function ensureGridOffscreen(w, h) {
+    if (gridOffImg && gridOffImg.width === w && gridOffImg.height === h) return;
+
+    gridOffCanvas = document.createElement("canvas");
+    gridOffCanvas.width = w;
+    gridOffCanvas.height = h;
+
+    gridOffCtx = gridOffCanvas.getContext("2d", { willReadFrequently: false });
+    gridOffImg = gridOffCtx.createImageData(w, h);
+    gridOffU32 = new Uint32Array(gridOffImg.data.buffer);
+}
+
+function blitFullGridToOffscreen() {
+    ensureGridOffscreen(gridW, gridH);
+
+    // grid is Uint32Array already; 0 means transparent
+    gridOffU32.set(grid);
+
+    gridOffCtx.putImageData(gridOffImg, 0, 0);
+}
+
+function blitDirtyCellsToOffscreen(dirtySet) {
+    ensureGridOffscreen(gridW, gridH);
+
+    // find a bounding box so we do ONE putImageData, not 500 of them
+    let minX = 1e9, minY = 1e9, maxX = -1, maxY = -1;
+
+    for (const idx of dirtySet) {
+        gridOffU32[idx] = grid[idx]; // direct write
+        const x = idx % gridW;
+        const y = (idx / gridW) | 0;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+
+    if (maxX < 0) return;
+
+    const w = (maxX - minX + 1);
+    const h = (maxY - minY + 1);
+
+    gridOffCtx.putImageData(gridOffImg, 0, 0, minX, minY, w, h);
+}
+
+function presentOffscreenToVisible() {
+    // clear
+    canvasGridCTX.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
+
+    // 2) background color layer
+    if (showBgBool) {
+        canvasGridCTX.fillStyle = uIntToRgbaString(bgColorChoose);
+        canvasGridCTX.fillRect(0, 0, canvasGrid.width, canvasGrid.height);
+    }
+
+    // 3) alpha checkerboard behind pixels
+    if (showAlpha) {
+        canvasGridCTX.fillStyle = alphaPattern;
+        canvasGridCTX.fillRect(0, 0, canvasGrid.width, canvasGrid.height);
+    }
+
+    // 4) scaled pixels
+    canvasGridCTX.imageSmoothingEnabled = false;
+    canvasGridCTX.drawImage(
+        gridOffCanvas,
+        0, 0, gridW, gridH,
+        2, 2, gridW * cellSize, gridH * cellSize
+    );
+}
+
+function clearOffscreen() {
+    if (gridOffU32) gridOffU32.fill(0);
+    if (gridOffCtx && gridOffImg) gridOffCtx.putImageData(gridOffImg, 0, 0);
 }

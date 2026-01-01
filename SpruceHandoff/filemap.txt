@@ -25,6 +25,7 @@ D:.
 ¦       CHANGELOG.md
 ¦       gat-spec.txt
 ¦       gpt-spec.txt
+¦       gss-spec.txt
 ¦       
 +---Drawing Files
 ¦       arrows.gpt
@@ -60,6 +61,11 @@ D:.
 ¦       Nintendo1.gpt
 ¦       Nintendo2.gat
 ¦       Nintendo2.gpt
+¦       pink_hair_woman_face_32x32.gat
+¦       pink_hair_woman_face_32x32_AARRGGBB.gat
+¦       pink_hair_woman_face_32x32_MATCH_TURTLE_HEADER.gat
+¦       pink_hair_woman_face_32x32_SWAP_RB.gat
+¦       Pink_Owl.png
 ¦       PrinceCharacterSprite.gpt
 ¦       PrinceCharacterSprite.gss
 ¦       rainbow.gat
@@ -83,7 +89,10 @@ D:.
 ¦       test.gpt
 ¦       test2.gat
 ¦       test_3.3.gss
+¦       toSprucey-Poo.png
 ¦       tryPadding.png
+¦       turtle_turtle.png
+¦       Unconfirmed 161900.crdownload
 ¦       underground.gss
 ¦       
 +---js

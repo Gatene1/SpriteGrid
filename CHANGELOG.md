@@ -482,3 +482,10 @@ Visual Polish
 - Fixed preview window glitch, where it was never showing the preview of what was drawn.
 - Fixed the Saved Color Palette glitch, where it wasn't showing on first startup.
 - Fixed issue where the canvas wouldn't gain scrollbars and the ability to scroll when the drawing was over 32x32.
+
+# 12/31/2025
+- Continued backend logic to continue to stabilize the Working Grid, and make sure higher dimension versions would still perform well -- speed wise.
+- Fixed a bug where the grid and alpha layers would be erased when clicking on a single cell in the Working Grid.
+- Fixed a bug where the alpha layer disappeared automatically after clicking on a single cell.
+- Added secondary canvas that held gridlines, that was only drawn when the gridlines themselves were affected.
+- Fixed bugs that made the gridlines not show, unless a "New Drawing" was made.

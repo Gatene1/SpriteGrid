@@ -137,7 +137,8 @@ function trimTheWhitespace() {
     }
 
     // Redraw
-    refreshGridOutput?.();
+    void refreshGridOutput?.();
+    redrawGridOverlay();
     drawGrid?.();
 }
 

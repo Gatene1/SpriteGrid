@@ -399,17 +399,21 @@ body {
     height: 100%;      /* or whatever fits your layout */
     overflow: auto;
     border: 1px solid #000;
-}
-
-.divInnerBottomCanvasGrid {
     min-width: 0;
     min-height: 0;
+    position: relative;
 }
 
-#canvasGrid {
+#canvasGrid, #canvasGridLines {
     display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
+#canvasGridLines {
+    pointer-events: none; /* Lets mouse events hit th real canvas. */
+}
 
 
 

@@ -149,10 +149,21 @@ SG4.utcNowIso = function utcNowIso() {
     return new Date().toISOString();
 };
 
+let gridOutputTimer = null;
+let gridOffCanvas = null;
+let gridOffCtx = null;
+let gridOffImg = null;
+let gridOffU32 = null;
+let pendingGridOutputRefresh = false;
+
+
 const gridWInput = document.getElementById("gridWInput");
 const gridHInput = document.getElementById("gridHInput");
 const gridLockBtn = document.getElementById("gridLockBtn");
 const gridApplyBtn = document.getElementById("gridApplyBtn");
+
+var canvasGridLines = document.getElementById("canvasGridLines");
+var canvasGridLinesCTX = canvasGridLines.getContext("2d");
 
 
 
@@ -348,8 +359,16 @@ window.onload = function() {
     divSide7.addEventListener('mousedown', function() { openWindow(6);
         windowZRearrange(6);
         windowZRefresh(); }, true);
-    cellSizeRange.addEventListener('change', () => { changeCellSize(); syncCanvasToGrid(); drawGrid(); }, false);
+    cellSizeRange.addEventListener('change', () => { changeCellSize(); syncCanvasToGrid(); redrawGridOverlay(); drawGrid(); }, false);
     // gridSizeRange.addEventListener('change', () => { changeGridSize(); drawGrid(); }, false);
+
+    window.addEventListener("mouseup", () => {
+        if (pendingGridOutputRefresh) {
+            pendingGridOutputRefresh = false;
+            refreshGridOutput?.();
+        }
+    });
+
 
     // Listeners for the Color Iro.js
     colorPicker.on('color:change', function(color) {

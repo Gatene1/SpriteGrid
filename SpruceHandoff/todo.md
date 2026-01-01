@@ -67,7 +67,7 @@
 * \[] Be able to save window formation locations (layout saving).
 * \[❓] Have an Undo function (Maybe have a history of 4 deep?)
 * \[✅] make the gat-spec.txt file for information about the .gat file type.
-* \[] make the gss-spec.txt file for information about the .gss file type.
+* \[✅] make the gss-spec.txt file for information about the .gss file type.
 * \[] make the gle-spec.txt file for information about the .gle file type.
 
 

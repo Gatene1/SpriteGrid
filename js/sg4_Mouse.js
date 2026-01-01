@@ -547,7 +547,7 @@ function gridUpdateMousePos(e) {
     mouseXGrid = e.clientX - rect.left - root.scrollLeft;
     mouseYGrid = e.clientY - rect.top - root.scrollTop;
 
-    mouseToGrid = (Math.floor(mouseYGrid / cellSize) * gridH) + Math.floor(mouseXGrid / cellSize);
+    mouseToGrid = (Math.floor(mouseYGrid / cellSize) * gridW) + Math.floor(mouseXGrid / cellSize);
 
 
 
@@ -571,7 +571,7 @@ function gridUpdateMousePosColorChoose(e) {
     mouseXSpriteGrid = e.clientX - rect.left - root.scrollLeft;
     mouseYSpriteGrid = e.clientY - rect.top - root.scrollTop;
 
-    mouseToGrid = (Math.floor(mouseYSpriteGrid / cellSize) * gridH) + Math.floor(mouseXSpriteGrid / cellSize);
+    mouseToGrid = (Math.floor(mouseYSpriteGrid / cellSize) * gridW) + Math.floor(mouseXSpriteGrid / cellSize);
 
     //drawText (Math.floor(mouseXSpriteGrid) + ", " + Math.floor(mouseYSpriteGrid), mouseXSpriteGrid, mouseYSpriteGrid, 8, "black", 2)
 

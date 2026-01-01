@@ -7,24 +7,21 @@ function drawAll() {
     // Each if-statement will check to see if this is the initial drawing of WebApp or if the Window is active and
     // the Window is visible, then draw its contents.
     if (isWindowActive(0, true)) {
-        if (firstDraw || gridDirty) {
-            syncCanvasToGrid();  // canvas size might change after Apply/Load/CellSize
-            drawGrid();          // expensive
-            gridDirty = false;
-        } else {
-            drawGridFromRequest();
-        }
-
-        if (gridFullDirty) {
+        if (firstDraw || gridFullDirty) {
             syncCanvasToGrid();
-            drawGrid();              // full redraw
+            redrawGridOverlay();
+
+            blitFullGridToOffscreen();
+            presentOffscreenToVisible();
             gridFullDirty = false;
             dirtyCells.clear();
+            gridDirty = false;
         } else if (dirtyCells.size) {
-            // partial redraws
-            for (const idx of dirtyCells) drawGridFromRequest(idx);
+            blitDirtyCellsToOffscreen(dirtyCells);
+            presentOffscreenToVisible();
             dirtyCells.clear();
         }
+
 
         drawPreviewUpdate();
 
@@ -82,11 +79,9 @@ function drawSquare (x, y, width, height, stroke, fillColor, whichCanvas = 0,
     switch (whichCanvas) {
         case 0:
             canvasChoice = canvasGridCTX;
-            strokeColor = GRID_BORDER_COLOR;
             break;
         case 1:
             canvasChoice = colorCanvasCTX;
-            strokeColor = "#000000";
             break;
         case 2:
             canvasChoice = colorChooseRow1CTX;
@@ -101,21 +96,15 @@ function drawSquare (x, y, width, height, stroke, fillColor, whichCanvas = 0,
             canvasChoice = levelCanvasCTX;
             break;
     }
-    canvasChoice.strokeStyle = strokeColor;
-    canvasChoice.lineWidth = 1;
     if (checkerBg) {
         canvasChoice.fillStyle = alphaPattern;
         canvasChoice.fillRect(x, y, width, height);
     }
     if (fill) {
         canvasChoice.fillStyle = fillColor;
-        if (stroke) {
-            canvasChoice.fillRect(x, y, width, height);
-        } else {
-            canvasChoice.fillRect(x, y, width, height);
-        }
+        canvasChoice.fillRect(x, y, width, height);
+
     }
-    if (stroke) canvasChoice.strokeRect(x, y, width, height);
 }
 
 // Helper function for the drawGrid methods below, by Sprucey-Poo :-*
@@ -484,8 +473,43 @@ function changeLevelBG() {
 
 function turnGridOnOff() {
     showTheGrid = showGridCheckbox.checked;
-    firstDraw = true;
+    redrawGridOverlay();
 }
+
+
+function redrawGridOverlay() {
+    if (!canvasGridLinesCTX) return;
+
+    canvasGridLinesCTX.clearRect(0, 0, canvasGridLines.width, canvasGridLines.height);
+
+    if (!showTheGrid) return;
+
+    // light overlay line style
+    canvasGridLinesCTX.strokeStyle = GRID_BORDER_COLOR;
+    canvasGridLinesCTX.lineWidth = 1;
+
+    const wPx = gridW * cellSize;
+    const hPx = gridH * cellSize;
+
+    // vertical lines
+    for (let x = 0; x <= gridW; x++) {
+        const px = (x * cellSize) + 2;
+        canvasGridLinesCTX.beginPath();
+        canvasGridLinesCTX.moveTo(px, 2);
+        canvasGridLinesCTX.lineTo(px, hPx + 2);
+        canvasGridLinesCTX.stroke();
+    }
+
+    // horizontal lines
+    for (let y = 0; y <= gridH; y++) {
+        const py = (y * cellSize) + 2;
+        canvasGridLinesCTX.beginPath();
+        canvasGridLinesCTX.moveTo(2, py);
+        canvasGridLinesCTX.lineTo(wPx + 2, py);
+        canvasGridLinesCTX.stroke();
+    }
+}
+
 
 function turnLevelGridOnOff() {
     showTheLevelGrid = showLevelGridCheckbox.checked;
