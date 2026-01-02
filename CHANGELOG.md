@@ -489,3 +489,19 @@ Visual Polish
 - Fixed a bug where the alpha layer disappeared automatically after clicking on a single cell.
 - Added secondary canvas that held gridlines, that was only drawn when the gridlines themselves were affected.
 - Fixed bugs that made the gridlines not show, unless a "New Drawing" was made.
+
+# 1/1/2026
+- Fixed a long-standing mouseup lag issue caused by inefficient Grid Output string construction. Switched to array + join, eliminating massive per-click performance spikes.
+- Fixed another long-standing issue -- if you go outiside of the canvas with LMB or RMB held down, when you come back to the canvas with one of those buttons released, the canvas won't think they're still activated.
+- Fixed bug where the alpha layer appeared darker on startup, but lighter on a deprecated function call.
+- Added logic to make the constrained proportions button be "unclicked" when trimming whitespace or opening a file that results in an uneven grid.
+- Fix a semantic error that surfaced from one of my changes above that wouldn't show the background color (if toggled on, to show).
+- Removed the fail-safe where I chose to turn the grid off automatically once the user goes over 64 x 64 pixels -- since I've fixed the speed issue for most of the higher-end dimension speed issues.
+- Added various "aria" attributes in the HTML file.
+- Reintroduced the stroke to the drawSquare() function so the other windows would still have the feature, and for all of the function calls related to the Working Grid, I made all the arguments false for the stroke argument.
+- Added support for opening PNG files. They open in the Working Grid, where you can save them as .gat files, or keep them as .png files.
+- Expanded support for the constrained proportions button to be "unclicked" if a loaded PNG file had unbalanced dimensions.
+- Made the file open/save dialog boxes "remember" the last working directory.
+- Added "All Supported Types" to the file open/save list to the dialog box for different users' preferences.
+- Added support for ALT + Mouse Wheel combo while in the Working Grid, to increase/decrease the size of the individual grid cells.
+- Added padding to the Working Grid's Menu.

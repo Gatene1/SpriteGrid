@@ -138,8 +138,16 @@ function trimTheWhitespace() {
 
     // Redraw
     void refreshGridOutput?.();
+    //clearOffscreen();
     redrawGridOverlay();
-    drawGrid?.();
+    requestGridFullRedraw();
+    //drawGrid?.();
+
+    if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
+        gridDimsLocked = false;
+        gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
+        gridLockBtn.setAttribute("aria-pressed", "false");
+    }
 }
 
 
@@ -220,5 +228,7 @@ function bumpGrid(dx, dy) {
     window.gridTemp = new Uint32Array(w * h);
 
     refreshGridOutput?.();
-    drawGrid?.();
+    requestGridFullRedraw();
+    redrawGridOverlay();
+
 }

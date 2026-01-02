@@ -13,11 +13,20 @@
 
 \## Working Grid Window Mechanics
 
-* \[] Have bump arrows to "bump" the image on the Working Grid one pixel in the direction chosen. This should produce transparent pixels as new pixels.
+* \[✅] Have bump arrows to "bump" the image on the Working Grid one pixel in the direction chosen. This should produce transparent pixels as new pixels.
 * \[✅] When resizing the grid, the grid should not clear by itself.
 * \[✅] Allow uneven dimensions of the grid.
 * \[✅] Implement +/- text boxes for the width and height \& accompanying submit button (maybe make it realtime adding?).
-* \[✴️] Add a "Trim Whitespace" button and its functionality to make the grid form to the sprite.
+* \[✅] Add a "Trim Whitespace" button and its functionality to make the grid form to the sprite.
+* \[✅] When "Trim Whitespace" and "Open Drawing", if the gridW and gridH don't match, then make sure the dimension constraint button is unclicked.
+* \[✅] Fix showBG error where it's no longer showing when toggled.
+* \[✅] Removed fail safe I implemented where the grid would shut off when the user would make the Working Grid's dimensions higher than 64x64.
+* \[✅] - Reintroduced the stroke parameter to the drawSquare() function for the other windows, and made the Working Grid's function calls false for the stroke argument.
+* \[✅] Made the file open/save dialog boxes "remember" the last working directory.
+* \[✅] Added "All Supported Types" to the file open/save list to the dialog box for different users' preferences.
+* \[✅] Added support for ALT + Mouse Wheel combo while in the Working Grid, to increase/decrease the size of the individual grid cells.
+* \[✅] Added padding to the Working Grid's Menu.
+* \[] Add Undo/Redo support only for the Working Grid in coloring cells.
 
 
 
@@ -25,6 +34,12 @@
 
 * \[✴️] When changing the magnification on the preview window, clipping can currently occur, I need to fix that.
 * \[] When the "Show BG" checkbox is checked, make the preview Window also show the background.
+
+
+
+\## Color Selection Window Mechanics
+
+* \[] Fix stroke around the color squares and preview square.
 
 
 
@@ -37,6 +52,7 @@
 * \[] Implement C / C++
 * \[] Implement Unity C#
 * \[] Implement Java ARGB
+* \[✴️] Add a checkbox to see if the output box should be updated when the rest of the grid is.
 
 
 

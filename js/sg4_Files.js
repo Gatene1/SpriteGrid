@@ -6,10 +6,18 @@ SG4.utcNowIso ??= () => new Date().toISOString();*/
 // End Nullish Coalescing stuff
 
 const fileOptions = {
+    id: "spritegrid-open",
     types: [
+        { description: "Accepted SpriteGrid Files",
+            accept: {
+                "text/plain": [".gat"],
+                "image/png": [".png"],
+            },
+        },
+
         { description: "GAT Working Grid Files",
           accept: {
-                  "application/dialog-info+xml": [".gat"],
+                  "text/plain": [".gat"],
           },
         },
 
@@ -19,19 +27,20 @@ const fileOptions = {
           },
         },
     ],
-    excludeAcceptAllOption: true,
+    excludeAcceptAllOption: false,
     suggestedName: "WorkingGrid",
     multiple: false,
 };
 
 const palletteOptions = {
+    id: "spritegrid-save",
     types: [{
         description: "GAT Palette Files",
         accept: {
             "text/parameters": [".gpt"],
         },
     }, ],
-    excludeAcceptAllOption: true,
+    excludeAcceptAllOption: false,
     multiple: false,
 };
 
@@ -332,6 +341,17 @@ function parseSSheetFile_Legacy() {
 async function openSingleDrawing() {
     const [fileHandle] = await window.showOpenFilePicker(fileOptions);
     const file = await fileHandle.getFile();
+
+    // ✅ PNG path
+    if (file.type === "image/png" || file.name.toLowerCase().endsWith(".png")) {
+        await openPngToWorkingGrid(file);
+        titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
+        windowZRearrange(0);
+        windowZRefresh();
+        return;
+    }
+
+    // existing .gat/text path
     openFileContents = await file.text();
     parseOpenFile();
     await refreshGridOutput();
@@ -339,12 +359,22 @@ async function openSingleDrawing() {
     titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
     windowZRearrange(0);
     windowZRefresh();
+
+    // ...keep the rest of your legacy alert + lock logic...
     if (displayLegacyAlert) {
         alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
         displayLegacyAlert = false;
     }
+
+    if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
+        gridDimsLocked = false;
+        gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
+        gridLockBtn.setAttribute("aria-pressed", "false");
+    }
+
     firstDraw = true;
 }
+
 
 async function loadPalletteFile() {
     const [fileHandle] = await window.showOpenFilePicker(palletteOptions);
@@ -614,4 +644,66 @@ async function saveUint32GridAsPNG(handle, pixelsU32 = grid, w = gridW, h = grid
     const writable = await handle.createWritable();
     await writable.write(blob);
     await writable.close();
+}
+
+async function openPngToWorkingGrid(file) {
+    // Safety limits (per your spec)
+    const bitmap = await createImageBitmap(file);
+    const w = bitmap.width | 0;
+    const h = bitmap.height | 0;
+
+    if (w < 1 || h < 1 || w > 512 || h > 512) {
+        alert(`PNG must be between 1x1 and 512x512. Got ${w}x${h}.`);
+        return;
+    }
+
+    // Draw onto a temp canvas to read RGBA bytes
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0);
+
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data; // RGBA bytes
+
+    // Allocate grid and pack pixels to your Uint32 format: 0xAABBGGRR
+    allocGrid(w, h, false);
+
+    for (let i = 0; i < w * h; i++) {
+        const di = i * 4;
+        const r = d[di + 0] & 255;
+        const g = d[di + 1] & 255;
+        const b = d[di + 2] & 255;
+        const a = d[di + 3] & 255;
+
+        // Transparent pixel => 0 (your convention)
+        if (a === 0) {
+            grid[i] = 0;
+        } else {
+            grid[i] = ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
+        }
+    }
+
+    // UI sync + redraw
+    if (gridWInput) gridWInput.value = w;
+    if (gridHInput) gridHInput.value = h;
+
+    syncCanvasToGrid();
+    requestGridFullRedraw();
+    redrawGridOverlay();
+    await refreshGridOutput?.();
+
+    // Stamp metadata for first save
+    SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
+
+    if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
+        gridDimsLocked = false;
+        gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
+        gridLockBtn.setAttribute("aria-pressed", "false");
+    }
+
+    firstDraw = true;
 }

@@ -391,7 +391,9 @@ body {
 }
 
 .divInnerBottomFlexGrid > .input-group-sm {
-    max-width: 170px;
+    padding-left: 1%;
+    width: 10rem;
+
 }
 
 .divInnerBottomCanvasGrid {
@@ -411,7 +413,9 @@ body {
     left: 0;
 }
 
+#canvasGrid { z-index: 1; }
 #canvasGridLines {
+    z-index: 2;
     pointer-events: none; /* Lets mouse events hit th real canvas. */
 }
 
@@ -488,8 +492,14 @@ body {
     font-weight: bold;
 }
 
+#gridSizeRangeSlider,
+#cellSizeRangeSlider {
+    width: 7rem;
+    accent-color: #006400;
+}
+
 #cellSizeRangeText {
-    width: 10rem;
+    width: 7rem;
     font-weight: bold;
 }
 
@@ -504,8 +514,8 @@ body {
 
 #resetGridButton,
 #trimWhitespace, #flipHorizontal, #flipVertical {
-    padding: 5px;
-    width: fit-content;
+    padding: 5px 4px;
+
     border: solid 2px black;
     margin-bottom: 3px;
 }
@@ -547,11 +557,6 @@ body {
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
-}
-
-#gridSizeRangeSlider,
-#cellSizeRangeSlider {
-    accent-color: #006400;
 }
 
 #colorTextbox {

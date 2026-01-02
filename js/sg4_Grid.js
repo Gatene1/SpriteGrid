@@ -9,6 +9,9 @@ function requestGridOutputRefresh() {
 function changeCellSize() {
     cSizeRangeText.value = cellSizeRange.value + " Pixels";
     cellSize = cellSizeRange.value;
+    syncCanvasToGrid();
+    requestGridFullRedraw();
+    redrawGridOverlay();
 }
 
 function changeGridSize() {
@@ -74,19 +77,16 @@ function fillSpriteGridArrayWithNulls() {
 }
 
 function refreshGridOutput() {
-    let i;
-    gridOutput.value = "grid = [  ";
+    const len = gridW * gridH;
+    const parts = new Array(len);
 
-    // This begins with 0, and ends in - 1, because I want the last element of the grid[] array to not have a ","
-    // after it.
-    for (i = 0; i < gridW * gridH - 1; i++) {
-        //gridOutput.value = gridOutput.value + "\"" + grid[i] + "\", ";
-        gridOutput.value = gridOutput.value + grid[i] + ", ";
+    for (let i = 0; i < len; i++) {
+        parts[i] = String(grid[i]);
     }
-    // This will show the last value of the grid[] array, and end the output with a "];".
-    //gridOutput.value = gridOutput.value + "\"" + grid[gridSize * gridSize - 1] + "\"  ];";
-    gridOutput.value = gridOutput.value + grid[gridW * gridH - 1] + "  ];";
+
+    gridOutput.value = "grid = [  " + parts.join(", ") + "  ];";
 }
+
 
 function zeroOutRefresh() {
     fillArrayWithZeroes();
@@ -94,7 +94,7 @@ function zeroOutRefresh() {
     requestGridFullRedraw();
     redrawGridOverlay();
     void refreshGridOutput();
-    //drawGrid();
+    pendingGridOutputRefresh = false;
 }
 
 function changeCellColor() {
@@ -217,7 +217,9 @@ function levelClickFunction() {
 
 function showBgFunc() {
     showBgBool = !showBgBool;
-    bgColorChoose = showBgBool ? colorPicker.color.rgbaString : 4294967295;
+    bgColorChoose = showBgBool
+        ? rgbToUint(colorPicker.color.rgba)
+        : UINT_WHITE;
     firstDraw = true;
 }
 
@@ -226,11 +228,6 @@ function applyNewGridDimensions() {
     const h = parseInt(gridHInput.value, 10);
     allocGrid(w, h, true);   // preserve pixels (crop/pad)
     refreshGridOutput?.();
-
-    if (gridW * gridH > 4096) {
-        showTheGrid = false;
-        showGridCheckbox.checked = false;
-    }
 
     syncCanvasToGrid();
     requestGridFullRedraw();
@@ -358,4 +355,38 @@ function presentOffscreenToVisible() {
 function clearOffscreen() {
     if (gridOffU32) gridOffU32.fill(0);
     if (gridOffCtx && gridOffImg) gridOffCtx.putImageData(gridOffImg, 0, 0);
+}
+
+function scheduleGridOutputRefresh() {
+    clearTimeout(gridOutputTimer);
+    gridOutputTimer = setTimeout(() => {
+        void refreshGridOutput();
+    }, 300); // try 150–300
+}
+
+function handleGridDimEnter(e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    applyNewGridDimensions();
+}
+
+function changeCellSizeByWheel(e) {
+    if (e.altKey) {
+        e.preventDefault();
+       if (e.deltaY < 0) { // If scrolled up with the mouse wheel.
+           if (cellSize < 24) {
+               cellSize += 2;
+               cSizeRangeText.value = cellSize.toString() + " Pixels";
+               cellSizeRange.value = cellSize;
+               requestGridFullRedraw();
+           }
+       } else if (e.deltaY > 0) { // If scrolled down with the mouse wheel.
+           if (cellSize > 2) {
+               cellSize -= 2;
+               cSizeRangeText.value = cellSize.toString() + " Pixels";
+               cellSizeRange.value = cellSize;
+               requestGridFullRedraw();
+           }
+       }
+    }
 }

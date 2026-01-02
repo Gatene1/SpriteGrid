@@ -26,7 +26,22 @@ function copyColorToClipboard() {
 }
 
 function rgbToUint(rgbObject) {
-    return ((rgbObject.a) * 255 << 24) | (rgbObject.b << 16) | (rgbObject.g << 8) | rgbObject.r;
+    // default alpha to 1 if missing
+    let a = (rgbObject.a ?? 1);
+
+    // normalize if someone hands us 0–255 instead of 0–1
+    if (a > 1) a = a / 255;
+
+    const A = (Math.round(a * 255) & 255) << 24;
+    const B = (rgbObject.b & 255) << 16;
+    const G = (rgbObject.g & 255) << 8;
+    const R = (rgbObject.r & 255);
+
+    return (A | B | G | R);
+}
+
+function abgrToUint(rgbObject) {
+    return ((rgbObject.r) * 255 << 24) | (rgbObject.g << 16) | (rgbObject.b<< 8) | rgbObject.a;
 }
 
 function uIntToRgb(uInt) {
@@ -129,8 +144,9 @@ function createAlphaPattern() {
     const pctx = patternCanvas.getContext("2d");
 
     // Colors
-    const light = "#eee";
-    const dark = "#ccc";
+    const light = "#f2f2f2";
+    const dark  = "#e0e0e0";
+
 
     // Draw 4 tiles
     pctx.fillStyle = light;

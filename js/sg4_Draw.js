@@ -77,35 +77,33 @@ function drawSquare (x, y, width, height, stroke, fillColor, whichCanvas = 0,
     let canvasChoice = canvasGridCTX;
 
     switch (whichCanvas) {
-        case 0:
-            canvasChoice = canvasGridCTX;
-            break;
-        case 1:
-            canvasChoice = colorCanvasCTX;
-            break;
-        case 2:
-            canvasChoice = colorChooseRow1CTX;
-            break;
-        case 3:
-            canvasChoice = previewWindowCTX;
-            break;
-        case 4:
-            canvasChoice = spriteCanvasCTX;
-            break;
-        case 5:
-            canvasChoice = levelCanvasCTX;
-            break;
+        case 0: canvasChoice = canvasGridCTX; break;
+        case 1: canvasChoice = colorCanvasCTX; break;
+        case 2: canvasChoice = colorChooseRow1CTX; break;
+        case 3: canvasChoice = previewWindowCTX; break;
+        case 4: canvasChoice = spriteCanvasCTX; break;
+        case 5: canvasChoice = levelCanvasCTX; break;
     }
+
     if (checkerBg) {
         canvasChoice.fillStyle = alphaPattern;
         canvasChoice.fillRect(x, y, width, height);
     }
+
     if (fill) {
         canvasChoice.fillStyle = fillColor;
         canvasChoice.fillRect(x, y, width, height);
+    }
 
+    // Bringing stroke back for other windows.
+    if (stroke) {
+        canvasChoice.strokeStyle = strokeColor;
+        canvasChoice.lineWidth = 1;
+        // crisp-ish 1px strokes on whole pixels
+        canvasChoice.strokeRect(Math.floor(x) + 0.5, Math.floor(y) + 0.5, Math.floor(width), Math.floor(height));
     }
 }
+
 
 // Helper function for the drawGrid methods below, by Sprucey-Poo :-*
 function getCellXY(index, border = true) {
@@ -142,14 +140,14 @@ function drawGrid() {
 
                 if (showTheGrid) {
                     currCellColor = "rgba(245, 245, 245, .5)";
-                    drawSquare(posX, posY, cellSize, cellSize, true, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+                    drawSquare(posX, posY, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
                 } else {
                     currCellColor = "rgba(245, 245, 245, 0)";
                     drawSquare(posX, posY, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
                 }
             } else {
                 currCellColor = uIntToRgbaString(grid[idx]);
-                drawSquare(posX, posY, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
+                drawSquare(posX, posY, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
             }
         }
     }
@@ -172,18 +170,18 @@ function drawGridFromRequest(gridElement) {
     if (grid[gridElement] == 0) {
         if (!showTheGrid && !showAlpha) {
             currCellColor = "rgba(255, 255, 255, .5)";
-            drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
+            drawSquare(x, y, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
         }
         if (showTheGrid) {
             currCellColor = "rgba(245, 245, 245, .5)";
-            drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
+            drawSquare(x, y, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha)
             //drawSquare(j * cellSize + 2, i * cellSize + 2, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, true, showAlpha);
         } else {
             currCellColor = "rgba(245, 245, 245, 0)";
-            drawSquare(x, y, cellSize, cellSize, showTheGrid, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
+            drawSquare(x, y, cellSize, cellSize, false, currCellColor, 0, GRID_BORDER_COLOR, false, showAlpha);
         }
     } else {
-        drawSquare(x, y, cellSize, cellSize, showTheGrid, uIntToRgbaString(grid[gridElement]), 0, GRID_BORDER_COLOR, true, showAlpha)
+        drawSquare(x, y, cellSize, cellSize, false, uIntToRgbaString(grid[gridElement]), 0, GRID_BORDER_COLOR, true, showAlpha)
     }
 }
 

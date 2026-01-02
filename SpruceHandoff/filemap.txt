@@ -8,7 +8,6 @@ D:.
 ¦   LICENSE
 ¦   README.md
 ¦   SpriteGrid4.html
-¦   SpriteGrid4.zip
 ¦   
 +---.idea
 ¦       .gitignore
@@ -94,6 +93,7 @@ D:.
 ¦       turtle_turtle.png
 ¦       Unconfirmed 161900.crdownload
 ¦       underground.gss
+¦       UnevenDrawing.gat
 ¦       
 +---js
 ¦       sg4.js

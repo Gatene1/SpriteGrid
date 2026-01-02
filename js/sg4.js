@@ -9,6 +9,7 @@ const GRID_FILL_COLOR = 4294309365;
 const SPRITE_GRID_FILL_COLOR = 4294309365;
 const SPRITE_GRID_HOVER_FILL_COLOR = 4294960606;
 const SPRITE_GRID_CHOSEN_CELL_FILL_COLOR = 4294947248;
+const UINT_WHITE = 0xFFFFFFFF;
 const image = new Image();
 const link = document.createElement('a');
 
@@ -155,7 +156,6 @@ let gridOffCtx = null;
 let gridOffImg = null;
 let gridOffU32 = null;
 let pendingGridOutputRefresh = false;
-
 
 const gridWInput = document.getElementById("gridWInput");
 const gridHInput = document.getElementById("gridHInput");
@@ -363,9 +363,11 @@ window.onload = function() {
     // gridSizeRange.addEventListener('change', () => { changeGridSize(); drawGrid(); }, false);
 
     window.addEventListener("mouseup", () => {
+        lmbDown = false;
+        rmbDown = false;
         if (pendingGridOutputRefresh) {
             pendingGridOutputRefresh = false;
-            refreshGridOutput?.();
+            scheduleGridOutputRefresh();
         }
     });
 
@@ -410,11 +412,12 @@ window.onload = function() {
                 break;
         }
     }, false);
-    canvasGrid.addEventListener('contextmenu', (e) => { e.preventDefault(); }, true);
+    canvasGrid.addEventListener('contextmenu', (e) => { e.preventDefault(); }, { passive: false });
 
 
     // Listeners for First Window (Grid)
     littleWindow.addEventListener('mousedown', littleWindowClick, false);
+    littleWindow.addEventListener('wheel', e => { changeCellSizeByWheel(e) }, { passive: false });
     titleBar.addEventListener('mousedown', divTitleClick, false);
     titleBar.addEventListener('mouseup', divTitleUnClick, true);
     gearHW.addEventListener('mousedown', gearClick, true);
@@ -439,12 +442,14 @@ window.onload = function() {
     gridWInput.addEventListener("input", () => {
         if (gridDimsLocked) gridHInput.value = gridWInput.value;
     });
-
+    gridWInput.addEventListener("keydown", handleGridDimEnter, true);
     gridHInput.addEventListener("input", () => {
         if (gridDimsLocked) gridWInput.value = gridHInput.value;
     });
-
+    gridHInput.addEventListener("keydown", handleGridDimEnter, true);
     gridApplyBtn.addEventListener("click", applyNewGridDimensions, true);
+
+
     bumpUp?.addEventListener("click",    () => bumpGrid(0, -1), true);
     bumpDown?.addEventListener("click",  () => bumpGrid(0,  1), true);
     bumpLeft?.addEventListener("click",  () => bumpGrid(-1, 0), true);
