@@ -31,6 +31,7 @@ D:.
 ¦       arrows.gss
 ¦       blank
 ¦       default.gpt
+¦       diglett.png
 ¦       dunno.gpt
 ¦       eraser.gat
 ¦       eraser.gpt
@@ -40,6 +41,7 @@ D:.
 ¦       extend.gat
 ¦       floor_underground.gat
 ¦       floor_underground.gpt
+¦       forest_pathway.png
 ¦       goomba_Messed.gat
 ¦       heart.gat
 ¦       heartAll.png
@@ -52,10 +54,13 @@ D:.
 ¦       HumanMale1.gpt
 ¦       HumanMale1_FacingDown.gat
 ¦       IMG_8268.JPEG
+¦       ivysaur.png
 ¦       KazeCharacterSprite.gpt
 ¦       KazeCharacterSprite.gss
 ¦       level_try.png
 ¦       level_try2.png
+¦       Michael.gat
+¦       Michael.png
 ¦       Nintendo1.gat
 ¦       Nintendo1.gpt
 ¦       Nintendo2.gat
@@ -64,7 +69,6 @@ D:.
 ¦       pink_hair_woman_face_32x32_AARRGGBB.gat
 ¦       pink_hair_woman_face_32x32_MATCH_TURTLE_HEADER.gat
 ¦       pink_hair_woman_face_32x32_SWAP_RB.gat
-¦       Pink_Owl.png
 ¦       PrinceCharacterSprite.gpt
 ¦       PrinceCharacterSprite.gss
 ¦       rainbow.gat
@@ -90,10 +94,10 @@ D:.
 ¦       test_3.3.gss
 ¦       toSprucey-Poo.png
 ¦       tryPadding.png
-¦       turtle_turtle.png
-¦       Unconfirmed 161900.crdownload
 ¦       underground.gss
 ¦       UnevenDrawing.gat
+¦       Yoshi.gat
+¦       yoshi.png
 ¦       
 +---js
 ¦       sg4.js
@@ -102,6 +106,7 @@ D:.
 ¦       sg4_Draw.js
 ¦       sg4_Files.js
 ¦       sg4_Grid.js
+¦       sg4_History.js
 ¦       sg4_Inputs.js
 ¦       sg4_Level.js
 ¦       sg4_Mouse.js

@@ -26,7 +26,7 @@
 * \[✅] Added "All Supported Types" to the file open/save list to the dialog box for different users' preferences.
 * \[✅] Added support for ALT + Mouse Wheel combo while in the Working Grid, to increase/decrease the size of the individual grid cells.
 * \[✅] Added padding to the Working Grid's Menu.
-* \[] Add Undo/Redo support only for the Working Grid in coloring cells.
+* \[✅] Add Undo/Redo support only for the Working Grid in coloring cells.
 
 
 

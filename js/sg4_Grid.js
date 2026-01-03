@@ -110,7 +110,10 @@ function changeCellColor() {
 
     if (grid[idx] === next) return;
 
-    grid[idx] = next;
+
+    historySetCell(idx, next); // Adds the color to the history.
+    //grid[idx] = next;
+
     requestCellRedraw(idx);
     pendingGridOutputRefresh = true;
 }
@@ -127,7 +130,10 @@ function RMB() {
 
     if (grid[idx] === next) return;
 
-    grid[idx] = next;
+
+    historySetCell(idx, next);
+    //grid[idx] = next;
+
     requestCellRedraw(idx);
     pendingGridOutputRefresh = true;
 }
@@ -227,7 +233,7 @@ function applyNewGridDimensions() {
     const w = parseInt(gridWInput.value, 10);
     const h = parseInt(gridHInput.value, 10);
     allocGrid(w, h, true);   // preserve pixels (crop/pad)
-    refreshGridOutput?.();
+    scheduleGridOutputRefresh();
 
     syncCanvasToGrid();
     requestGridFullRedraw();

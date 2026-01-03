@@ -137,7 +137,7 @@ function trimTheWhitespace() {
     }
 
     // Redraw
-    void refreshGridOutput?.();
+    scheduleGridOutputRefresh();
     //clearOffscreen();
     redrawGridOverlay();
     requestGridFullRedraw();

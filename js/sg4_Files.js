@@ -691,10 +691,11 @@ async function openPngToWorkingGrid(file) {
     if (gridWInput) gridWInput.value = w;
     if (gridHInput) gridHInput.value = h;
 
+
+    scheduleGridOutputRefresh();
     syncCanvasToGrid();
     requestGridFullRedraw();
     redrawGridOverlay();
-    await refreshGridOutput?.();
 
     // Stamp metadata for first save
     SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();

@@ -116,6 +116,15 @@ let windowFocusHistory = [];
 // Old windowZ values, just in case my fix is not a fix, but a blunder lol.
 //var windowZ = [0, 1, 2, 3, 4, 5, 6];
 
+// Vars for History
+const HISTORY_LIMIT = 200; // actions, not pixels
+let undoStack = [];
+let redoStack = [];
+
+let activeAction = null;
+// To avoid duplicate entries for the same index during a stroke:
+let activeIndexMap = null; // Map<int, {i, from, to}>
+
 // Vars for First Window (Grid)
 var lmbDown = false;
 var rmbDown = false;
@@ -369,7 +378,42 @@ window.onload = function() {
             pendingGridOutputRefresh = false;
             scheduleGridOutputRefresh();
         }
+        historyEndAction();
     });
+
+    // Listener for the History
+    window.addEventListener("keydown", e => {
+        const el = document.activeElement;
+        const tag = el?.tagName;
+
+        // Don't hijack undo while typing in inputs/textareas
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+        const isMod = e.ctrlKey || e.metaKey;
+
+        // Undo: Ctrl/Cmd + Z
+        if (isMod && !e.shiftKey && e.key.toLowerCase() === "z") {
+            e.preventDefault();
+            if (historyUndo()) {
+                requestGridFullRedraw();
+                pendingGridOutputRefresh = true;
+                scheduleGridOutputRefresh();
+            }
+            return;
+        }
+
+        // Redo: Ctrl/Cmd + Y OR Ctrl/Cmd + Shift + Z
+        if (isMod && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) {
+            e.preventDefault();
+            if (historyRedo()) {
+                requestGridFullRedraw();
+                pendingGridOutputRefresh = true;
+                scheduleGridOutputRefresh();
+            }
+            return;
+        }
+    });
+
 
 
     // Listeners for the Color Iro.js
@@ -394,10 +438,13 @@ window.onload = function() {
                 RMBRelease();
                 break;
         }
+        historyEndAction();
     }, false);
+
     canvasGrid.addEventListener('mousedown', (e) => {
         switch (e.button) {
             case 0:
+                historyBeginAction("paint");
                 //gridTemp = grid;
                 changeCellColor();
                 break;
@@ -406,6 +453,7 @@ window.onload = function() {
                 siphonColor();
                 break;
             case 2:
+                historyBeginAction("erase");
                 RMB();
                 break;
             default:
