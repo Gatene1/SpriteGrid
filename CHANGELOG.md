@@ -508,3 +508,7 @@ Visual Polish
 
 # 1/2/2026
 - Added undo/redo support for the Working Grid's cells only.
+
+# 1/5/2026
+- Renamed the Color Converters window to "Options Menu"
+

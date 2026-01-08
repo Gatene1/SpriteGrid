@@ -56,14 +56,17 @@
 
 
 
-
-
 \## Spritesheet Window Mechanics
 
 * \[✴️] Add a move button for the selected sprite to move to another cell, or should the user just be able to drag the sprite over to the new cell?
 
 
 
+\## Color Converters Window Mechanics
+
+* \[✅] Renaming window to "Options" or something akin
+* \[] Add the tutorial button iconset
+* \[] Add the functionality to the tutorial button iconset.
 
 
 \## Level Editor Window Mechanics

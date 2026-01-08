@@ -249,17 +249,17 @@ var divForSpriteGrid = document.getElementById("divForSpriteGrid");
 var window6Color = "Green";
 var divSide6 = document.getElementById("divSide6");
 var spriteWindowWidth, spriteWindowHeight;
-var spriteRowOn, spriteColOn, spriteCellOn;
+//var spriteRowOn, spriteColOn, spriteCellOn;
 var mouseXSpriteCanvas, mouseYSpriteCanvas;
 
 // Vars for SpriteSheet.
 var howManySpritesInSpriteSheet = 0;
 var numberOfSpritesPerRow;
 var spriteCellSize = 64;
-var spriteGridSize = 500;
+//var spriteGridSize = 500;
 var spriteGridViewableHeight = Math.ceil(divForSpriteGrid.clientHeight / spriteCellSize);
 var spriteGridCellsViewable;
-var spriteGrid = [];
+//var spriteGrid = [];
 var spriteGridBlob = [];
 var spriteHeld = false;
 var spriteChosen = -1;
@@ -272,6 +272,20 @@ var openSSheet = document.getElementById("openSSheet");
 var eraseSingleSprite = document.getElementById("eraseSingleSprite");
 var mouseSpriteCellSize = 2
 var spriteInCellSize = 2;
+
+// SpriteSheet v2 core model (multi-cell occupancy)
+const BASE_CELL_PX = 16;
+
+let sheetCols = 16; // TODO: set from UI or config
+let sheetRows = 16;
+let maxCells = 500;
+
+let sprites = [];            // array of SpriteAsset
+let placements = [];
+let sheetOcc = null;         // Int32Array of spriteId or -1
+let selectedSprites = new Set(); // sprite ids
+let selectedSpriteId = -1;
+
 
 // Vars for Seventh Window (Level Editor)
 var levelLmbDown = false;
