@@ -32,7 +32,7 @@ function drawAll() {
         drawColorSquares();
         drawPreviewSquare(100);
     }
-    if (isWindowActive(5, false)) drawSpriteCanvasUpdate();
+    if (isWindowActive(5, false)) { drawSpriteSheetCanvasUpdateV2(); }
     if (isWindowActive(6, false)) {
         drawLevelCanvasUpdate();
         drawLevelExtendIcon();
@@ -103,6 +103,26 @@ function drawSquare (x, y, width, height, stroke, fillColor, whichCanvas = 0,
         canvasChoice.strokeRect(Math.floor(x) + 0.5, Math.floor(y) + 0.5, Math.floor(width), Math.floor(height));
     }
 }
+
+function drawSquareOnCtx(ctx, x, y, width, height, stroke, fillColor,
+                         strokeColor = GRID_BORDER_COLOR, fill = true, checkerBg = false) {
+    if (checkerBg) {
+        ctx.fillStyle = alphaPattern;
+        ctx.fillRect(x, y, width, height);
+    }
+
+    if (fill) {
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(x, y, width, height);
+    }
+
+    if (stroke) {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(Math.floor(x) + 0.5, Math.floor(y) + 0.5, Math.floor(width), Math.floor(height));
+    }
+}
+
 
 
 // Helper function for the drawGrid methods below, by Sprucey-Poo :-*
@@ -263,7 +283,7 @@ function drawPreviewUpdate() {
 
 }
 
-function drawSpriteCanvasUpdate() {
+/*function drawSpriteCanvasUpdate() {
     let a, b, i, j;
     let spriteColNum = 0;
     let spriteGridFillColor;
@@ -274,6 +294,8 @@ function drawSpriteCanvasUpdate() {
     let startingLineViewable = startingNumViewable / numberOfSpritesPerRow * spriteCellSize;
     let x = 0;
     let y = startingLineViewable;
+
+    drawSpriteSheetGrid(ctx)
 
 
 
@@ -355,7 +377,12 @@ function drawSpriteCanvasUpdate() {
         }
     }
 
-}
+}*/
+
+
+
+
+
 // This function exists so the LMB can be held to draw the sprites in multiple cells under 1 LMB press, instead
 // of one at a time like in the Sprite Sheet.
 function drawLevelSprite(cellOn, x, y) {
@@ -552,7 +579,10 @@ function flipHorizontally() {
         }
     }
     grid = flipped;
-    firstDraw = true;
+    requestGridOutputRefresh();
+    requestGridFullRedraw();
+    markSheetStaticDirty();
+    requestRerender();
 }
 
 function flipVertically() {
@@ -571,7 +601,10 @@ function flipVertically() {
         }
     }
     grid = flipped;
-    firstDraw = true;
+    requestGridOutputRefresh();
+    requestGridFullRedraw();
+    markSheetStaticDirty();
+    requestRerender();
 }
 
 function drawBg() {
@@ -618,3 +651,362 @@ function requestCellRedraw(idx) {
     // only queue if not doing full redraw anyway
     if (!gridFullDirty) dirtyCells.add(idx);
 }
+
+function drawSpriteSheetCanvasUpdateV2() {
+    const ctx = spriteCanvasCTX;
+
+    if (!sheetStaticCanvas) initSheetStaticLayer();
+    if (sheetStaticDirty) rebuildSheetStaticLayer();
+
+    // 1) Base
+    ctx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
+    ctx.drawImage(sheetStaticCanvas, 0, 0);
+
+    const IMPORT_OK  = 4288413588; // #94ff9bff
+    const IMPORT_BAD = 4283719935; // #ff6054ff
+
+    let previewOk = false;
+    let px = 0, py = 0, pw = 0, ph = 0;
+
+    // 2) Compute hoverRect + selRect the way you already do
+    let hoverRect = null;
+    let selRect = null;
+
+    const moving = (typeof isMovingSprite === "function") && isMovingSprite();
+
+    if (!sheetStaticCanvas) initSheetStaticLayer();
+
+    if (sheetStaticDirty) rebuildSheetStaticLayer();
+
+    // Draw cached base
+    spriteCanvasCTX.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
+    spriteCanvasCTX.drawImage(sheetStaticCanvas, 0, 0);
+
+
+    // Import preview
+    if (spriteHeld && pasteSprite && mouseSprite && spriteCellOn >= 0) {
+        const { x, y } = cellToXY(spriteCellOn);
+        px = x;
+        py = y;
+        pw = mouseSprite.wCells;
+        ph = mouseSprite.hCells;
+        previewOk = canPlaceRect(px, py, pw, ph);
+    }
+
+    // Moving sprite: we DON'T draw the cell underlay while moving.
+    // The sprite tint overlay handles feedback (green/red) on top of the sprite.
+    if (moving) {
+        pw = ph = 0;
+    }
+
+
+    // Hover footprint
+    if (hoveredSpriteId !== -1 && sprites[hoveredSpriteId]) {
+        const s = sprites[hoveredSpriteId];
+        hoverRect = { x:s.xCell, y:s.yCell, w:s.wCells, h:s.hCells };
+    }
+
+    // Selection footprint
+    if (selectedSpriteId !== -1 && sprites[selectedSpriteId]) {
+        const s = sprites[selectedSpriteId];
+        if (moving && movingSpriteId === selectedSpriteId && moveHasTarget) {
+            selRect = { x:moveTargetX, y:moveTargetY, w:s.wCells, h:s.hCells };
+        } else {
+            selRect = { x:s.xCell, y:s.yCell, w:s.wCells, h:s.hCells };
+        }
+    }
+
+    // Draw cells
+    for (let y = 0; y < sheetRows; y++) {
+        for (let x = 0; x < sheetCols; x++) {
+            const idx = cellIndex(x, y);
+            let color = SPRITE_GRID_FILL_COLOR;
+
+            // selection footprint highlight (strongest)
+            if (inRect(x, y, selRect)) color = SPRITE_GRID_CHOSEN_CELL_FILL_COLOR;
+            // hover footprint highlight (next)
+            else if (inRect(x, y, hoverRect)) color = SPRITE_GRID_HOVER_FILL_COLOR;
+            // fallback: single cell hover
+            else if (idx === spriteCellOn) color = SPRITE_GRID_HOVER_FILL_COLOR;
+
+            // Import/move previews override cell colors.
+            if (pw > 0 && ph > 0 && x >= px && x < px + pw && y >= py && y < py + ph) {
+                color = previewOk ? IMPORT_OK : IMPORT_BAD;
+            }
+
+            drawSquare(
+                x * spriteCellSize,
+                y * spriteCellSize,
+                spriteCellSize,
+                spriteCellSize,
+                true,
+                uint32ToHex8(color),
+                4
+            );
+        }
+    }
+
+    // Draw sprites
+    const scale = spriteCellSize / BASE_CELL_PX;
+
+    for (const s of sprites) {
+        if (!s) continue;
+
+        // While moving, render the dragged sprite at the preview target.
+        let drawXCell = s.xCell;
+        let drawYCell = s.yCell;
+
+        if (
+            moving &&
+            typeof movingSpriteId !== "undefined" &&
+            s.id === movingSpriteId &&
+            typeof moveHasTarget !== "undefined" && moveHasTarget
+        ) {
+            drawXCell = moveTargetX;
+            drawYCell = moveTargetY;
+        }
+
+        const ox = drawXCell * spriteCellSize;
+        const oy = drawYCell * spriteCellSize;
+
+        const px0 = ox + ((s.wCells * spriteCellSize - s.wPx * scale) >> 1);
+        const py0 = oy + ((s.hCells * spriteCellSize - s.hPx * scale) >> 1);
+
+        for (let y = 0; y < s.hPx; y++) {
+            for (let x = 0; x < s.wPx; x++) {
+                const v = s.pixels[y * s.wPx + x] >>> 0;
+                if (!v) continue;
+
+                drawSquare(
+                    px0 + x * scale,
+                    py0 + y * scale,
+                    scale,
+                    scale,
+                    false,
+                    uint32ToHex8(v),
+                    4
+                );
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Moving sprite tint overlay (green = valid, red = blocked)
+    // ─────────────────────────────────────────────
+    if ((typeof isMovingSprite === "function") && isMovingSprite() && movingSpriteId >= 0) {
+        const s = sprites[movingSpriteId];
+        if (s) {
+            const tx = (moveHasTarget ? moveTargetX : s.xCell) * spriteCellSize;
+            const ty = (moveHasTarget ? moveTargetY : s.yCell) * spriteCellSize;
+
+            const ok = (moveHasTarget && movePreviewOk);
+
+            spriteCanvasCTX.save();
+            spriteCanvasCTX.globalAlpha = 0.25;
+            spriteCanvasCTX.fillStyle = ok ? "rgb(0,255,0)" : "rgb(255,0,0)";
+            spriteCanvasCTX.fillRect(
+                tx,
+                ty,
+                s.wCells * spriteCellSize,
+                s.hCells * spriteCellSize
+            );
+            spriteCanvasCTX.restore();
+        }
+    }
+
+
+    // 3) Overlay tints (cheap)
+    function fillRectCells(r, colorUint) {
+        if (!r) return;
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = uint32ToHex8(colorUint);
+        ctx.fillRect(r.x * spriteCellSize, r.y * spriteCellSize, r.w * spriteCellSize, r.h * spriteCellSize);
+        ctx.restore();
+    }
+
+    fillRectCells(hoverRect, SPRITE_GRID_HOVER_FILL_COLOR);
+    fillRectCells(selRect, SPRITE_GRID_CHOSEN_CELL_FILL_COLOR);
+
+    // 4) Import / move preview (cheap)
+    // Keep your existing previewOk/px/py/pw/ph logic then do:
+    // ctx.globalAlpha + fillRect(...) for preview region
+
+    // 5) Marching ants outline (your existing drawSelectionOutline)
+    drawSelectionOutline();
+
+    // 6) Eraser cursor icon (your existing code can stay)
+
+    function inRect(col, row, r) {
+        return r && col >= r.x && col < r.x + r.w && row >= r.y && row < r.y + r.h;
+    }
+
+
+
+    // ─────────────────────────────────────────────
+    // Eraser cursor icon (trails the mouse)
+    // ─────────────────────────────────────────────
+    if (spriteHeld && eraseTool && mouseSprite && mouseSprite.pixels) {
+        const pxSize = mouseSpriteCellSize; // you already have this global (looks like 2)
+        const w = mouseSprite.wPx | 0;
+        const h = mouseSprite.hPx | 0;
+
+        // Center the icon on the cursor
+        const startX = (mouseXSpriteCanvas - (w * pxSize) / 2) | 0;
+        const startY = (mouseYSpriteCanvas - (h * pxSize) / 2) | 0;
+
+        for (let py = 0; py < h; py++) {
+            const row = py * w;
+            for (let px = 0; px < w; px++) {
+                const v = mouseSprite.pixels[row + px] >>> 0;
+                if (!v) continue;
+
+                drawSquare(
+                    startX + px * pxSize,
+                    startY + py * pxSize,
+                    pxSize,
+                    pxSize,
+                    false,
+                    uint32ToHex8(v),
+                    4
+                );
+            }
+        }
+    }
+
+}
+
+
+
+
+function drawSpriteIntoSheetCell_V2(spriteObj, cellX, cellY, cellPx) {
+    // spriteObj is currently expected to look like your old spriteSquareIcon:
+    // { sizeOfGrid, gridColors, ...plus placement fields later }
+
+    const g = spriteObj.sizeOfGrid | 0;
+    const colors = spriteObj.gridColors;
+
+    // This is your “sprite pixel scale inside the sheet cell”
+    // You already have spriteInCellSize as 1 or 2.
+    const pxScale = spriteInCellSize | 0;
+
+    // pixel art width in on-screen pixels
+    const artPx = g * pxScale;
+
+    // Center inside the sheet cell
+    let ox = cellX + Math.floor((cellPx - artPx) / 2);
+    let oy = cellY + Math.floor((cellPx - artPx) / 2);
+
+    let col = 0;
+    for (let i = 0; i < g * g; i++) {
+        const v = colors[i] >>> 0;
+        if (v !== 0) {
+            drawSquare(ox, oy, pxScale, pxScale, false, uint32ToHex8(v), 4);
+        }
+
+        col++;
+        if (col >= g) {
+            col = 0;
+            ox = cellX + Math.floor((cellPx - artPx) / 2);
+            oy += pxScale;
+        } else {
+            ox += pxScale;
+        }
+    }
+}
+
+function drawSpriteAssetIntoSheet_V2(spriteAsset, xPx, yPx, cellPx) {
+    const wPx = spriteAsset.wPx | 0;
+    const hPx = spriteAsset.hPx | 0;
+    const pixels = spriteAsset.pixels;
+    if (!pixels || !(pixels instanceof Uint32Array)) return;
+
+    // Total drawable area in screen pixels (multi-cell footprint)
+    const areaW = (spriteAsset.wCells * cellPx) | 0;
+    const areaH = (spriteAsset.hCells * cellPx) | 0;
+
+    // Scale each “working grid pixel” by spriteInCellSize (your existing knob)
+    const pxScale = spriteInCellSize | 0;
+
+    const artW = wPx * pxScale;
+    const artH = hPx * pxScale;
+
+    // Center inside the multi-cell area
+    let ox0 = xPx + Math.floor((areaW - artW) / 2);
+    let oy = yPx + Math.floor((areaH - artH) / 2);
+
+    for (let py = 0; py < hPx; py++) {
+        let ox = ox0;
+        const row = py * wPx;
+        for (let px = 0; px < wPx; px++) {
+            const v = pixels[row + px] >>> 0;
+            if (v !== 0) {
+                drawSquare(ox, oy, pxScale, pxScale, false, uint32ToHex8(v), 4);
+            }
+            ox += pxScale;
+        }
+        oy += pxScale;
+    }
+}
+
+function startSelectionAnim() {
+    if (selAnimOn) return;
+    selAnimOn = true;
+
+    function tick() {
+        if (!selAnimOn) return;
+        selDashOffset = (selDashOffset + 0.13) % 12; // speed
+        requestRerender(); // or drawSpriteSheetCanvasUpdateV2()
+        requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
+function stopSelectionAnim() {
+    selAnimOn = false;
+}
+
+function drawSelectionOutline() {
+    if (selectedSpriteId < 0) { stopSelectionAnim(); return; }
+    startSelectionAnim();
+    const s = sprites[selectedSpriteId];
+    if (!s) return;
+
+    const x = s.xCell * spriteCellSize;
+    const y = s.yCell * spriteCellSize;
+    const w = s.wCells * spriteCellSize;
+    const h = s.hCells * spriteCellSize;
+
+    const ctx = spriteCanvasCTX;
+
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#000";       // black under-stroke for contrast
+    ctx.setLineDash([]);
+    ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff";       // white marching ants
+    ctx.setLineDash([6, 6]);
+    ctx.lineDashOffset = -selDashOffset;
+    ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+
+    // corner handles (optional but awesome)
+    ctx.setLineDash([]);
+    const hs = 6;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x + 2, y + 2, hs, hs);
+    ctx.fillRect(x + w - hs - 2, y + 2, hs, hs);
+    ctx.fillRect(x + 2, y + h - hs - 2, hs, hs);
+    ctx.fillRect(x + w - hs - 2, y + h - hs - 2, hs, hs);
+
+    ctx.restore();
+}
+
+function stopEraseTool() {
+    eraseTool = false;
+    spriteHeld = false;
+    mouseSprite = null;
+}
+
+

@@ -586,26 +586,104 @@ function gridUpdateMousePosColorChoose(e) {
 }
 
 function gridUpdateMousePosSpriteSheet(e) {
-    let rect = spriteCanvas.getBoundingClientRect();
-    let root = document.documentElement;
+    const rect = spriteCanvas.getBoundingClientRect();
 
-    // Get the X & Y coordinates of the mouse while hovering over the sprite canvas.
-    mouseXSpriteCanvas = e.clientX - rect.left - root.scrollLeft;
-    mouseYSpriteCanvas = e.clientY - rect.top - root.scrollTop;
+    // CSS → canvas scale
+    const scaleX = spriteCanvas.width / rect.width;
+    const scaleY = spriteCanvas.height / rect.height;
 
-    // if the mouse cursor is within the boundaries of the grid, then calculate which cell the mouse cursor is hovering over.
-    if ((mouseXSpriteCanvas <= spriteCellSize * numberOfSpritesPerRow) && (mouseYSpriteCanvas <= spriteGridSize / numberOfSpritesPerRow * spriteCellSize))
-        spriteCellOn = (Math.floor(mouseYSpriteCanvas / spriteCellSize) * numberOfSpritesPerRow) + Math.floor(mouseXSpriteCanvas / spriteCellSize);
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
 
+    mouseXSpriteCanvas = mx;
+    mouseYSpriteCanvas = my;
+
+    if (moveStarted && !moveMoved) {
+        const dx = mouseXSpriteCanvas - downX;
+        const dy = mouseYSpriteCanvas - downY;
+
+        if ((dx * dx + dy * dy) > (MOVE_PIXEL_THRESHOLD * MOVE_PIXEL_THRESHOLD)) {
+            moveMoved = true;
+        }
+    }
+
+    const lmbPressed = (e.buttons & 1) === 1;
+
+    // Compute cell index FIRST (prevents “stale idx” jumpiness)
+    const col = Math.floor(mx / spriteCellSize);
+    const row = Math.floor(my / spriteCellSize);
+
+    if (col < 0 || col >= sheetCols || row < 0 || row >= sheetRows) {
+        spriteCellOn = -1;
+        hoveredSpriteId = -1;
+
+        // If we’re mid-move and go out-of-bounds, just mark "no target".
+        // (Commit logic already restores on invalid drop.)
+        if (typeof isMovingSprite === "function" && isMovingSprite()) {
+            moveHasTarget = false;
+            movePreviewOk = false;
+        }
+
+        // If user isn’t holding LMB anymore, don’t let a pending grab linger.
+        // if (!lmbPressed) pendingGrab = false;
+        return;
+    }
+
+    const idx = row * sheetCols + col;
+
+    spriteCellOn = idx;
+    hoveredSpriteId = sheetOcc[idx];
+
+    /*// If the user released LMB, kill pending grab so it can’t “arm” later.
+    if (!lmbPressed) {
+        pendingGrab = false;
+        return;
+    }*/
+
+    /*// Promote pendingGrab → real drag only while LMB is down.
+    if (typeof pendingGrab !== "undefined" && pendingGrab) {
+        const dx = mouseXSpriteCanvas - downX;
+        const dy = mouseYSpriteCanvas - downY;
+
+        if ((dx * dx + dy * dy) >= (DRAG_THRESH_PX * DRAG_THRESH_PX)) {
+            pendingGrab = false;
+            beginSpriteMoveAtCellIndex(idx);
+            updateSpriteMovePreviewAtCellIndex(idx);
+        }
+    }*/
+
+    // If we're currently dragging a sprite, update its live placement preview.
+    if (typeof isMovingSprite === "function" && isMovingSprite()) {
+        updateSpriteMovePreviewAtCellIndex(idx);
+    }
+    requestRerender();
 }
 
+
+
+
+
+
+
 function mouseSpriteSheetLeave() {
+    // pendingGrab = false;
+
+    // If the cursor leaves the sheet while moving, cancel the move.
+    if (typeof isMovingSprite === "function" && isMovingSprite()) {
+        cancelSpriteMove?.(true);
+        requestRerender();
+    }
     spriteHeld = false;
     eraseTool = false;
+    stopEraseTool();
     pasteSprite = false;
     mouseSprite = null;
     spriteCellOn = -1;
+    hoveredSpriteId = -1;
+    requestRerender();
 }
+
+
 
 function gridUpdateMousePosLevelEditor(e) {
     let rect = levelCanvas.getBoundingClientRect();
@@ -634,6 +712,7 @@ function mouseLevelEditorLeave() {
     levelMouseSprite = null;
     levelCellOn = -1;
     pasteLevelSprite = false;
+    requestRerender();
 }
 
 function mouseLevelEditorDown() {
@@ -643,3 +722,47 @@ function mouseLevelEditorDown() {
 function mouseLevelEditorUp() {
     levelLmbDown = false;
 }
+
+function updateSpriteMovePreviewAtCellIndex(idx) {
+    if (!isMovingSprite()) return;
+
+    // idx is already guaranteed "mouse is in bounds" because it came from gridUpdateMousePosSpriteSheet
+    const col = idx % sheetCols;
+    const row = Math.floor(idx / sheetCols);
+
+    const s = sprites[movingSpriteId];
+    if (!s) return;
+
+    // Always track the cursor target while the cursor is inside the sheet
+    // Keep the grabbed point under the cursor
+    moveTargetX = col - grabOffX;
+    moveTargetY = row - grabOffY;
+    moveHasTarget = true;
+
+
+    if (moveStarted) {
+        moveMoved = (moveTargetX !== moveStartCellX) || (moveTargetY !== moveStartCellY);
+    }
+
+    // Now decide if it’s a legal placement.
+    // 1) bounds of the sprite footprint
+    const inBounds =
+        moveTargetX >= 0 && moveTargetY >= 0 &&
+        (moveTargetX + s.wCells) <= sheetCols &&
+        (moveTargetY + s.hCells) <= sheetRows;
+
+    if (!inBounds) {
+        movePreviewOk = false;
+        return;
+    }
+
+    // 2) collision rules (you already cleared the sprite's old occ in beginSpriteMoveAtCellIndex)
+    movePreviewOk = canPlaceRect(moveTargetX, moveTargetY, s.wCells, s.hCells);
+}
+
+
+
+
+
+
+

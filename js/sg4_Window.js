@@ -112,6 +112,7 @@ function openWindow(whichWindow) {
 
     // Promote this window to the front
     windowZRearrange(whichWindow);
+    requestRerender();
 }
 
 function isWindowActive(index, checkForFirstDraw) {

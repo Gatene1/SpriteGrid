@@ -512,3 +512,9 @@ Visual Polish
 # 1/5/2026
 - Renamed the Color Converters window to "Options Menu"
 
+# 1/6, 1/7, 1/8, 1/9, 1/10, 1/11/2026
+- Restored functionality to the "Get Grid Drawing", "Send To Grid", and "Erase A Cell" buttons to work with the new gss-spec.txt spec sheet.
+- When importing a drawing into the spritesheet, I removed the drawing following the mouse pointer, and made a shadow of the drawing show on the spritesheet to show how many 16x16 cells of the spritesheet it would take up.
+- The shadow mentioned above for the drawing, I made it either green (for able to place there) or red (for not able to place there).
+- Gave the ability to move sprites around.
+- Added / removed code to make the WebApp flow more smoothly and less choppy.

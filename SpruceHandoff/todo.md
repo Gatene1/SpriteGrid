@@ -64,7 +64,7 @@
 
 \## Color Converters Window Mechanics
 
-* \[✅] Renaming window to "Options" or something akin
+* \[✴️] Renaming window to "Options" or something akin
 * \[] Add the tutorial button iconset
 * \[] Add the functionality to the tutorial button iconset.
 

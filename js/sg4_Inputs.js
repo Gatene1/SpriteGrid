@@ -1,6 +1,7 @@
 function saveToStore() {
     savedColorSquareArray.at(colorStoresSelected).colorHeld = currColor;
     colorStores[colorStoresSelected] = currColor;
+    drawColorSquares();
     //alert (currColor);
 
 }
@@ -8,6 +9,7 @@ function saveToStore() {
 function previewScale() {
     prevCellSize = previewSelect.value;
     firstDraw = true;
+    requestRerender();
 }
 
 function colorText() {
@@ -16,55 +18,99 @@ function colorText() {
 }
 
 function workingGridToMouseSprite() {
-    let spriteDimension = Math.floor(Math.sqrt(grid.length));
-    let i;
-    if (isNotEmpty(1)) {
-        gridCopy = [];
-        for (i = 0; i < gridW * gridH; i++) {
-            gridCopy.push(grid[i]);
-        }
-        // This will create the mouseSprite Object
-        mouseSprite = new spriteSquareIcon(spriteDimension, gridCopy);
-        spriteHeld = true;
-        pasteSprite = true;
-        eraseTool = false;
+    // must contain something
+    let any = false;
+    for (let i = 0; i < grid.length; i++) {
+        if ((grid[i] >>> 0) !== 0) { any = true; break; }
     }
+    if (!any) return;
+
+    const wPx = gridW | 0;
+    const hPx = gridH | 0;
+
+    // Copy pixels into a plain Uint32Array
+    const pixels = new Uint32Array(wPx * hPx);
+    for (let i = 0; i < pixels.length; i++) pixels[i] = grid[i] >>> 0;
+
+    // Convert px -> sheet cells (16px base)
+    const wCells = Math.max(1, Math.ceil(wPx / BASE_CELL_PX));
+    const hCells = Math.max(1, Math.ceil(hPx / BASE_CELL_PX));
+
+    mouseSprite = { wPx, hPx, pixels, wCells, hCells };
+
+    spriteHeld = true;
+    pasteSprite = true;
+    eraseTool = false;
+    requestRerender();
 }
+
+
 
 function spriteSheetToWorkingGrid() {
-    let i;
-    if (spriteChosen >= 0) {
-        gridCopy = [];
-        gridSizeRange.value = spriteGrid[spriteChosen].sizeOfGrid;
-         changeGridSize();
-        for (i = 0; i < spriteGrid[spriteChosen].gridColors.length; i++) {
-            gridCopy.push(spriteGrid[spriteChosen].gridColors[i]);
-        }
-        grid = gridCopy;
-        gridCopy = [];
-        refreshGridOutput();
+    if (selectedSpriteId < 0) return;
+
+    const s = sprites[selectedSpriteId];
+    if (!s) return;
+
+    gridW = s.wPx | 0;
+    gridH = s.hPx | 0;
+
+    allocGrid(gridW, gridH, false);
+
+    // Copy pixels
+    for (let i = 0; i < grid.length; i++) {
+        grid[i] = s.pixels[i] >>> 0;
     }
-    //firstDraw = true;
+
+    // Reset working-grid cell size to normal 24
+    cellSize = 24;
+    cellSizeRange.value = cellSize;
+    cSizeRangeText.value = cellSize + " Pixels";
+
+    // Force visible refresh immediately (no “click inside window” required)
+    redrawGridOverlay();
+    requestGridFullRedraw();
+    scheduleGridOutputRefresh();
     drawGrid();
+    requestRerender();
 }
 
+
+
 function eraseInSpriteSheet() {
-    let spriteDimension = Math.floor(Math.sqrt(eraserGrid.length));
-    let i;
-    gridCopy = [];
-    for (i = 0; i < eraserGrid.length; i++) {
-        gridCopy.push(eraserGrid[i]);
+    const dim = Math.floor(Math.sqrt(eraserGrid.length)); // 24 for your eraser
+    const wPx = dim | 0;
+    const hPx = dim | 0;
+
+    // Copy into Uint32Array (new SpriteSheet-friendly format)
+    const pixels = new Uint32Array(wPx * hPx);
+    for (let i = 0; i < pixels.length; i++) {
+        pixels[i] = eraserGrid[i] >>> 0;
     }
-    mouseSprite = new spriteSquareIcon(spriteDimension, gridCopy);
+
+    const wCells = Math.max(1, Math.ceil(wPx / BASE_CELL_PX));
+    const hCells = Math.max(1, Math.ceil(hPx / BASE_CELL_PX));
+
+    mouseSprite = { wPx, hPx, pixels, wCells, hCells };
+
     spriteHeld = true;
     pasteSprite = false;
     eraseTool = true;
+    requestRerender();
 }
 
+
 function createNewSpriteSheet() {
-    spriteGrid = [];
-    fillSpriteGridArrayWithNulls();
+    allocSheet(sheetCols, sheetRows); // clears sheetOcc + sprites + selection
+    rebuildSheetOccFromSprites();
+    selectedSpriteId = -1;
+    hoveredSpriteId = -1;
+    spriteCellOn = -1;
+    requestRerender();
+    markSheetStaticDirty();
+    requestRerender();
 }
+
 
 function trimTheWhitespace() {
     // Guard: grid must exist
@@ -139,9 +185,11 @@ function trimTheWhitespace() {
     // Redraw
     scheduleGridOutputRefresh();
     //clearOffscreen();
-    redrawGridOverlay();
+    // redrawGridOverlay();
     requestGridFullRedraw();
     //drawGrid?.();
+    markSheetStaticDirty();
+    requestRerender();
 
     if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
         gridDimsLocked = false;
@@ -187,6 +235,7 @@ function levelUseSpriteChosen() {
             levelMouseSprite = spriteChosen;
             //alert(spriteGrid[spriteChosen].gridColors);
             pasteLevelSprite = true;
+            requestRerender();
         }
     }
 }
@@ -227,8 +276,10 @@ function bumpGrid(dx, dy) {
     window.grid = dst;
     window.gridTemp = new Uint32Array(w * h);
 
-    refreshGridOutput?.();
+    //refreshGridOutput?.();
     requestGridFullRedraw();
-    redrawGridOverlay();
+    // redrawGridOverlay();
+    markSheetStaticDirty();
+    requestRerender();
 
 }

@@ -55,6 +55,15 @@ const spriteSheetOptions = {
     multiple: false,
 };
 
+
+function resetWorkingGridCellSizeDefault() {
+    cellSize = 24;
+    cellSizeRange.value = cellSize;
+    cSizeRangeText.value = cellSize + " Pixels";
+}
+
+
+
 function parseOpenFile() {
     let openFilePointer;
     let charAtGrid = 0;
@@ -74,6 +83,14 @@ function parseOpenFile() {
         obj = tryParseGatV3Json(openFileContents);
     } catch (e) {
         alert(`Invalid GAT v3 JSON:\n\n${e.message}`);
+        resetWorkingGridCellSizeDefault();
+        redrawGridOverlay();
+        requestGridFullRedraw();
+        scheduleGridOutputRefresh();
+// Reset working-grid cell size to normal 24
+        cellSize = 24;
+        cellSizeRange.value = cellSize;
+        cSizeRangeText.value = cellSize + " Pixels";
         return;
     }
 
@@ -85,6 +102,14 @@ function parseOpenFile() {
         if (typeof gridSizeRangeText !== "undefined" && gridSizeRangeText) gridSizeRangeText.value = `${gridW} x ${gridH}`;
 
         drawGrid();
+        resetWorkingGridCellSizeDefault();
+        redrawGridOverlay();
+        requestGridFullRedraw();
+        scheduleGridOutputRefresh();
+// Reset working-grid cell size to normal 24
+        cellSize = 24;
+        cellSizeRange.value = cellSize;
+        cSizeRangeText.value = cellSize + " Pixels";
         return;
     }
 
@@ -111,6 +136,14 @@ function parseOpenFile() {
         const side = Math.sqrt(temp.length);
         if (!Number.isInteger(side) || side <= 0) {
             alert("Legacy GAT appears corrupted (length is not a perfect square).");
+            resetWorkingGridCellSizeDefault();
+            redrawGridOverlay();
+            requestGridFullRedraw();
+            scheduleGridOutputRefresh();
+// Reset working-grid cell size to normal 24
+            cellSize = 24;
+            cellSizeRange.value = cellSize;
+            cSizeRangeText.value = cellSize + " Pixels";
             return;
         }
 
@@ -136,6 +169,14 @@ function parseOpenFile() {
 
         displayLegacyAlert = true;
         drawGrid();
+        resetWorkingGridCellSizeDefault();
+        redrawGridOverlay();
+        requestGridFullRedraw();
+        scheduleGridOutputRefresh();
+// Reset working-grid cell size to normal 24
+        cellSize = 24;
+        cellSizeRange.value = cellSize;
+        cSizeRangeText.value = cellSize + " Pixels";
         return;
     }
 
@@ -159,6 +200,10 @@ function parseOpenFile() {
 
     displayLegacyAlert = true;
     drawGrid();
+// Reset working-grid cell size to normal 24
+    cellSize = 24;
+    cellSizeRange.value = cellSize;
+    cSizeRangeText.value = cellSize + " Pixels";
 }
 
 
@@ -348,6 +393,12 @@ async function openSingleDrawing() {
         titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
         windowZRearrange(0);
         windowZRefresh();
+        // Reset working-grid cell size to normal 24
+        cellSize = 24;
+        cellSizeRange.value = cellSize;
+        cSizeRangeText.value = cellSize + " Pixels";
+        markSheetStaticDirty();
+        requestRerender();
         return;
     }
 
@@ -371,8 +422,13 @@ async function openSingleDrawing() {
         gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
         gridLockBtn.setAttribute("aria-pressed", "false");
     }
-
-    firstDraw = true;
+// Reset working-grid cell size to normal 24
+    cellSize = 24;
+    cellSizeRange.value = cellSize;
+    cSizeRangeText.value = cellSize + " Pixels";
+    requestGridFullRedraw();
+    markSheetStaticDirty();
+    requestRerender();
 }
 
 
@@ -387,6 +443,7 @@ async function loadPalletteFile() {
         alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
         displayLegacyAlert = false;
     }
+    drawColorSquares();
 }
 
 async function openSpriteSheet() {
@@ -399,6 +456,9 @@ async function openSpriteSheet() {
     openWindow(5);
     windowZRearrange(5);
     windowZRefresh();
+
+    markSheetStaticDirty();
+    requestRerender();
 }
 
 async function savePalletteFile() {
@@ -495,6 +555,8 @@ async function spriteSheetSave() {
     await sSheetFileWritableStream.close();
     spriteGridBlob = [];
     fileData = null;
+
+    requestRerender();
 }
 
 function buildGatV3JsonObject() {

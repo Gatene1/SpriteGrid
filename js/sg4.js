@@ -249,13 +249,17 @@ var divForSpriteGrid = document.getElementById("divForSpriteGrid");
 var window6Color = "Green";
 var divSide6 = document.getElementById("divSide6");
 var spriteWindowWidth, spriteWindowHeight;
-//var spriteRowOn, spriteColOn, spriteCellOn;
+var spriteCellOn = -1;
 var mouseXSpriteCanvas, mouseYSpriteCanvas;
 
 // Vars for SpriteSheet.
 var howManySpritesInSpriteSheet = 0;
 var numberOfSpritesPerRow;
-var spriteCellSize = 64;
+
+// SpriteSheet v2 core model (multi-cell occupancy)
+const BASE_CELL_PX = 16;
+const SPRITE_ZOOM = 2;
+var spriteCellSize = BASE_CELL_PX * SPRITE_ZOOM;
 //var spriteGridSize = 500;
 var spriteGridViewableHeight = Math.ceil(divForSpriteGrid.clientHeight / spriteCellSize);
 var spriteGridCellsViewable;
@@ -270,14 +274,14 @@ var spriteExportWorkingGrid = document.getElementById("spriteExportWorkingGrid")
 var spriteSaveButton = document.getElementById("spriteSaveButton");
 var openSSheet = document.getElementById("openSSheet");
 var eraseSingleSprite = document.getElementById("eraseSingleSprite");
-var mouseSpriteCellSize = 2
+var mouseSpriteCellSize = 1;
 var spriteInCellSize = 2;
+let needsRedraw = true;
+let antsAnimating = false;
+let queuedMouseEvent = null;
 
-// SpriteSheet v2 core model (multi-cell occupancy)
-const BASE_CELL_PX = 16;
-
-let sheetCols = 16; // TODO: set from UI or config
-let sheetRows = 16;
+let sheetCols = 20; // TODO: set from UI or config
+let sheetRows = 50;
 let maxCells = 500;
 
 let sprites = [];            // array of SpriteAsset
@@ -285,6 +289,42 @@ let placements = [];
 let sheetOcc = null;         // Int32Array of spriteId or -1
 let selectedSprites = new Set(); // sprite ids
 let selectedSpriteId = -1;
+let hoveredSpriteId = -1;
+
+let selDashOffset = 0;
+let selAnimOn = false;
+
+// Spritesheet overlay
+let sheetStaticCanvas = null;
+let sheetStaticCTX = null;
+let sheetStaticDirty = true;
+let sheetMutatedThisInteraction = false;
+
+// ─────────────────────────────────────────────
+// Sprite move transaction state
+// ─────────────────────────────────────────────
+let movingSpriteId = -1;   // sprite currently being dragged, -1 = none
+let moveOrigX = 0;         // original xCell before move
+let moveOrigY = 0;         // original yCell before move
+
+let moveTargetX = 0;       // current preview xCell
+let moveTargetY = 0;       // current preview yCell
+
+let moveHasTarget = false; // true only when cursor is in-bounds
+let movePreviewOk = false; // canPlaceRect result for preview
+
+//let pendingGrab = false;
+//let pendingGrabSpriteId = -1;
+const MOVE_PIXEL_THRESHOLD = 1; // px
+let downX = 0, downY = 0;
+//const DRAG_THRESH_PX = 4;
+let moveStarted = false;     // true while a move transaction is active
+let moveMoved = false;       // true once target cell differs from origin
+let moveStartCellX = 0;
+let moveStartCellY = 0;
+let grabOffX = 0;  // in CELLS
+let grabOffY = 0;  // in CELLS
+
 
 
 // Vars for Seventh Window (Level Editor)
@@ -327,7 +367,7 @@ window.onload = function() {
     cSizeRangeText.value = cellSize + " Pixels";
 
     fillArrayWithZeroes();
-    fillSpriteGridArrayWithNulls();
+    // fillSpriteGridArrayWithNulls();
     refreshGridOutput();
 
 
@@ -348,6 +388,7 @@ window.onload = function() {
     spriteCanvasCTX = spriteCanvas.getContext('2d');
     spriteWindowWidth = spriteCanvas.width;
     spriteWindowHeight = spriteCanvas.height;
+    initSheetStaticLayer();
     numberOfSpritesPerRow = Math.floor(spriteWindowWidth / spriteCellSize);
 
     levelCanvas = document.getElementById("levelCanvas");
@@ -355,7 +396,31 @@ window.onload = function() {
     levelCanvas.width = levelCanvasWidth;
     levelCanvas.height = levelCanvasHeight;
 
-    setInterval(drawAll, 1000 / FRAMES_PER_SECOND);
+    // --- SpriteSheet geometry (make maxCells real) ---
+    spriteCellSize = BASE_CELL_PX * 2; //4; // 16px base * 4 = 64px on-screen (10 cols on a 700px canvas)
+    // sheetCols = Math.max(1, Math.floor(spriteCanvas.width / spriteCellSize)); // e.g. 10
+    // sheetRows = Math.ceil(maxCells / sheetCols); // e.g. 500/10 = 50
+
+    allocSheet(sheetCols, sheetRows);
+    rebuildSheetOccFromSprites();
+
+    // ─────────────────────────────────────────────
+    // This replaces the setInterval() function call.
+    // ─────────────────────────────────────────────
+    window.requestRerender = function() {
+        needsRedraw = true;
+    }
+    // Render loop
+    function renderLoop() {
+        if (needsRedraw || antsAnimating) {
+            drawAll();
+            needsRedraw = false;
+        }
+        requestAnimationFrame(renderLoop);
+    }
+    // Init
+    requestAnimationFrame(renderLoop);
+
 
 
     createAlphaPattern();
@@ -426,6 +491,16 @@ window.onload = function() {
             }
             return;
         }
+
+        // Cancel sprite move with Esc
+        if (e.key === "Escape") {
+            if (typeof isMovingSprite === "function" && isMovingSprite()) {
+                e.preventDefault();
+                cancelSpriteMove(true);
+                requestRerender();
+                return;
+            }
+        }
     });
 
 
@@ -473,6 +548,7 @@ window.onload = function() {
             default:
                 break;
         }
+
     }, false);
     canvasGrid.addEventListener('contextmenu', (e) => { e.preventDefault(); }, { passive: false });
 
@@ -486,7 +562,7 @@ window.onload = function() {
     closeHW.addEventListener('mousedown', function() { closeWindow(0); }, false);
     resetGridButton.addEventListener('mousedown', zeroOutRefresh, true);
     showGridCheckbox.addEventListener('change', turnGridOnOff, true);
-    showTransparentCheckbox.addEventListener('change', function() { showAlpha = !showAlpha; firstDraw = true; }, true);
+    showTransparentCheckbox.addEventListener('change', function() { showAlpha = !showAlpha; firstDraw = true; requestRerender(); }, true);
     trimWhitespace.addEventListener('click', trimTheWhitespace, true);
     fileSavingOpenButton.addEventListener('click', openSingleDrawing, true);
     fileSavingSaveButton.addEventListener('click', saveSingleDrawing, true);
@@ -499,6 +575,11 @@ window.onload = function() {
         gridLockBtn.classList.toggle("linkOn", gridDimsLocked);
         gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
         gridLockBtn.setAttribute("aria-pressed", gridDimsLocked ? "true" : "false");
+
+        requestGridOutputRefresh();
+        requestGridFullRedraw();
+        markSheetStaticDirty();
+        requestRerender();
     });
 
     gridWInput.addEventListener("input", () => {
@@ -566,7 +647,11 @@ window.onload = function() {
     spriteCloseHW.addEventListener('mousedown', function() { closeWindow(5); }, true);
     spriteCanvas.addEventListener('mousemove', gridUpdateMousePosSpriteSheet, true);
     spriteCanvas.addEventListener('mouseleave', mouseSpriteSheetLeave, true);
-    spriteCanvas.addEventListener('click', clickFunction, true);
+    spriteCanvas.addEventListener('click', spriteSheetClick, true);
+
+    spriteCanvas.addEventListener('mousedown', spriteSheetMouseDown, true);
+    spriteCanvas.addEventListener('mouseup', spriteSheetMouseUp, true);
+
     divForSpriteGrid.addEventListener('scroll', debugAction, true);
     spriteImportWorkingGrid.addEventListener('click', workingGridToMouseSprite, true);
     spriteExportWorkingGrid.addEventListener('click', spriteSheetToWorkingGrid, true);

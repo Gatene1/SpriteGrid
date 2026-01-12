@@ -68,13 +68,13 @@ function fillArrayWithZeroes() {
     allocGrid(gridW, gridH, false); // same dims, clears
 }
 
-function fillSpriteGridArrayWithNulls() {
+/*function fillSpriteGridArrayWithNulls() {
     let i;
     spriteGrid = [];
     for (i = 0; i < spriteGridSize; i++) {
         spriteGrid.push(null);
     }
-}
+}*/
 
 function refreshGridOutput() {
     const len = gridW * gridH;
@@ -95,6 +95,7 @@ function zeroOutRefresh() {
     redrawGridOverlay();
     void refreshGridOutput();
     pendingGridOutputRefresh = false;
+    requestRerender();
 }
 
 function changeCellColor() {
@@ -116,6 +117,7 @@ function changeCellColor() {
 
     requestCellRedraw(idx);
     pendingGridOutputRefresh = true;
+    requestRerender();
 }
 
 function RMB() {
@@ -136,6 +138,7 @@ function RMB() {
 
     requestCellRedraw(idx);
     pendingGridOutputRefresh = true;
+    requestRerender();
 }
 
 
@@ -226,7 +229,8 @@ function showBgFunc() {
     bgColorChoose = showBgBool
         ? rgbToUint(colorPicker.color.rgba)
         : UINT_WHITE;
-    firstDraw = true;
+    requestGridFullRedraw();
+    requestRerender();
 }
 
 function applyNewGridDimensions() {
@@ -235,9 +239,10 @@ function applyNewGridDimensions() {
     allocGrid(w, h, true);   // preserve pixels (crop/pad)
     scheduleGridOutputRefresh();
 
-    syncCanvasToGrid();
     requestGridFullRedraw();
-    redrawGridOverlay();
+    markSheetStaticDirty();
+    // redrawGridOverlay();
+    requestRerender();
 }
 
 function syncCanvasToGrid() {
