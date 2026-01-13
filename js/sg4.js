@@ -12,6 +12,9 @@ const SPRITE_GRID_CHOSEN_CELL_FILL_COLOR = 4294947248;
 const UINT_WHITE = 0xFFFFFFFF;
 const image = new Image();
 const link = document.createElement('a');
+const Z_BASE_WINDOW   = 0;
+const Z_CONTEXT_MENU  = 10;
+const Z_MODAL_DIALOG  = 20;
 
 var firstDraw = true;
 var closingWindow = false;
@@ -109,6 +112,12 @@ var prevCellSize = 2;
 var previewSelect = document.getElementById("previewSelect");
 
 // Vars for every window
+const docState = {
+    grid:      { name: "Working Grid", fileName: "Unknown.gat", dirty: false, sideId: "divSide1", titleId: "titleBarHW" },
+    palette:   { name: "Color Selection", fileName: "Unknown.gpt", dirty: false, sideId: "divSide3", titleId: "colorTitleBar" },
+    sprites:   { name: "Sprite Sheet Editor", fileName: "Unknown.gss", dirty: false, sideId: "divSide6", titleId: "spriteTitleBar" },
+    level:     { name: "Level Editor", fileName: "Unknown.gle", dirty: false, sideId: "divSide7", titleId: "levelTitleBar" },
+};
 var windowZ = [6, 0, 1, 2, 3, -1, -1];
 let windowZHistory = [];
 let currentTopWindow;
@@ -165,6 +174,7 @@ let gridOffCtx = null;
 let gridOffImg = null;
 let gridOffU32 = null;
 let pendingGridOutputRefresh = false;
+let forceDrawWorkingGridOnce = false;
 
 const gridWInput = document.getElementById("gridWInput");
 const gridHInput = document.getElementById("gridHInput");
@@ -227,7 +237,6 @@ var window5Color = "Green";
 var divSide5 = document.getElementById("divSide5");
 var fileSavingOpenButton = document.getElementById("fileSavingOpenButton");
 var fileSavingSaveButton = document.getElementById("fileSavingSaveButton");
-var newSSheet = document.getElementById("newSSheet");
 var hexToUintButton = document.getElementById("hexToUintButton");
 var hexToUintText = document.getElementById('hexToUintText');
 var uintToHexButton = document.getElementById("uintToHexButton");
@@ -251,6 +260,7 @@ var divSide6 = document.getElementById("divSide6");
 var spriteWindowWidth, spriteWindowHeight;
 var spriteCellOn = -1;
 var mouseXSpriteCanvas, mouseYSpriteCanvas;
+let lastFrameTime = performance.now();
 
 // Vars for SpriteSheet.
 var howManySpritesInSpriteSheet = 0;
@@ -273,6 +283,7 @@ var spriteImportWorkingGrid = document.getElementById("spriteImportWorkingGrid")
 var spriteExportWorkingGrid = document.getElementById("spriteExportWorkingGrid");
 var spriteSaveButton = document.getElementById("spriteSaveButton");
 var openSSheet = document.getElementById("openSSheet");
+var newSSheet = document.getElementById("newSSheet");
 var eraseSingleSprite = document.getElementById("eraseSingleSprite");
 var mouseSpriteCellSize = 1;
 var spriteInCellSize = 2;
@@ -411,10 +422,25 @@ window.onload = function() {
         needsRedraw = true;
     }
     // Render loop
-    function renderLoop() {
-        if (needsRedraw || antsAnimating) {
+    function renderLoop(now) {
+        const dt = now - lastFrameTime;
+        lastFrameTime = now;
+
+        // In case some logic changes either variable mid frame, this assignment needs to exist before the if-statment.
+        const shouldDraw = needsRedraw || selAnimOn;
+
+        // If selection animation is on, advance dash offset and force redraw
+        if (shouldDraw) {
+
+            if (selAnimOn) {
+                // 0.13 per frame at ~60fps ≈ 0.13 * 60 = 7.8 units/sec
+                // Convert that to time-based:
+                const speedPerMs = 7.8 / 1000;
+                selDashOffset = (selDashOffset + speedPerMs * dt) % 12;
+            }
+
             drawAll();
-            needsRedraw = false;
+            if (needsRedraw) needsRedraw = false;
         }
         requestAnimationFrame(renderLoop);
     }
@@ -447,7 +473,7 @@ window.onload = function() {
     divSide7.addEventListener('mousedown', function() { openWindow(6);
         windowZRearrange(6);
         windowZRefresh(); }, true);
-    cellSizeRange.addEventListener('change', () => { changeCellSize(); syncCanvasToGrid(); redrawGridOverlay(); drawGrid(); }, false);
+    cellSizeRange.addEventListener('change', () => { changeCellSize(); syncCanvasToGrid(); redrawGridOverlay(); requestGridFullRedraw(); requestRerender(); }, false);
     // gridSizeRange.addEventListener('change', () => { changeGridSize(); drawGrid(); }, false);
 
     window.addEventListener("mouseup", () => {
@@ -477,6 +503,7 @@ window.onload = function() {
                 requestGridFullRedraw();
                 pendingGridOutputRefresh = true;
                 scheduleGridOutputRefresh();
+                requestRerender();
             }
             return;
         }
@@ -488,6 +515,7 @@ window.onload = function() {
                 requestGridFullRedraw();
                 pendingGridOutputRefresh = true;
                 scheduleGridOutputRefresh();
+                requestRerender();
             }
             return;
         }
@@ -576,9 +604,9 @@ window.onload = function() {
         gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
         gridLockBtn.setAttribute("aria-pressed", gridDimsLocked ? "true" : "false");
 
-        requestGridOutputRefresh();
         requestGridFullRedraw();
-        markSheetStaticDirty();
+        requestGridOutputRefresh();
+        //markSheetStaticDirty();
         requestRerender();
     });
 
@@ -657,8 +685,17 @@ window.onload = function() {
     spriteExportWorkingGrid.addEventListener('click', spriteSheetToWorkingGrid, true);
     spriteSaveButton.addEventListener('click', spriteSheetSave, true);
     eraseSingleSprite.addEventListener('click', eraseInSpriteSheet, true)
-    openSSheet.addEventListener('click', openSpriteSheet, true);
-    newSSheet.addEventListener('click', createNewSpriteSheet, true);
+    // openSSheet.addEventListener('click', openSpriteSheet, true);
+    // newSSheet.addEventListener('click', createNewSpriteSheet, true);
+    openSSheet.addEventListener("click", () => {
+        guardUnsaved("sprites", "SpriteSheet", actuallyOpenSpriteSheet);
+    });
+
+    newSSheet.addEventListener("click", () => {
+        guardUnsaved("sprites", "SpriteSheet", actuallyNewSpriteSheet);
+    });
+
+
 
     // Listeners for Seventh Window (Level Editor)
     levelLittleWindow.addEventListener('mousedown', levelLittleWindowClick, false);

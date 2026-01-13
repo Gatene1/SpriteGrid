@@ -1,171 +1,42 @@
-body {
-    font-family: "Trebuchet MS";
-    margin: 0px;
-    overflow: clip;
+body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
+
+.divTitle { position: absolute; background-color: darkgreen; width: 54%; height: 97%; top: 0px; left: 2.60%;
+    padding: 0px; margin: 0px; color: #ffffff; font-weight: bold; border: 2px solid #000000;
+    user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex;
+    flex-direction: column; justify-content: flex-start; flex-wrap: nowrap; visibility: visible;
+    min-width: 0; min-height: 0; }
+
+.divTitle2 { position: absolute; background-color: darkgreen; width: 300px; height: 300px; bottom: 0px;
+    left: 57.00%; padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000;
+    user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
+    justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: visible; }
+
+.divTitle3 { position: absolute; background-color: darkgreen; width: 25%; height: 60%; top: 0px; left: 57.00%;
+    padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000;
+    user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
+    justify-content: flex-start; flex-wrap: nowrap; overflow: scroll; visibility: visible; }
+
+.divTitle4 { position: absolute; background-color: darkgreen; width: 300px; height: 50%; top: 0px; right: 0px;
+    padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000;
+    user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
+    justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: visible; }
+
+.divTitle5 { position: absolute; background-color: darkgreen; width: 300px; height: 49%; bottom: 0px; right: 0px;
+    padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000; user-select: none;
+    -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
+    justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: visible; }
+
+.divTitle6 { position: absolute; background-color: darkgreen; width: 50%; height: 49%; top: 200px; left: 27%;
+    padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000; user-select: none;
+    -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
+    justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: collapse; }
+
+.divTitle7 { position: absolute; background-color: darkgreen; width: 50%; height: 79%; top: 100px; left: 27%;
+    padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000; user-select: none;
+    -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
+    justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: collapse;
 }
 
-.divTitle {
-    position: absolute;
-    background-color: darkgreen;
-    width: 54%;
-    height: 97%;
-    top: 0px;
-    left: 2.60%;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: bold;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    visibility: visible;
-    min-width: 0;
-    min-height: 0;
-
-}
-
-.divTitle2 {
-    position: absolute;
-    background-color: darkgreen;
-    width: 300px;
-    height: 300px;
-    bottom: 0px;
-    left: 57.00%;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: normal;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow: clip;
-    visibility: visible;
-}
-
-.divTitle3 {
-    position: absolute;
-    background-color: darkgreen;
-    width: 25%;
-    height: 60%;
-    top: 0px;
-    left: 57.00%;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: normal;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow: scroll;
-    visibility: visible;
-}
-
-.divTitle4 {
-    position: absolute;
-    background-color: darkgreen;
-    width: 300px;
-    height: 50%;
-    top: 0px;
-    right: 0px;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: normal;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow: clip;
-    visibility: visible;
-}
-
-.divTitle5 {
-    position: absolute;
-    background-color: darkgreen;
-    width: 300px;
-    height: 49%;
-    bottom: 0px;
-    right: 0px;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: normal;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow: clip;
-    visibility: visible;
-}
-
-.divTitle6 {
-    position: absolute;
-    background-color: darkgreen;
-    width: 50%;
-    height: 49%;
-    top: 200px;
-    left: 27%;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: normal;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow: clip;
-    visibility: collapse;
-}
-
-.divTitle7 {
-    position: absolute;
-    background-color: darkgreen;
-    width: 50%;
-    height: 79%;
-    top: 100px;
-    left: 27%;
-    padding: 0px;
-    margin: 0px;
-    color: #ffffff;
-    font-weight: normal;
-    border: 2px solid #000000;
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow: clip;
-    visibility: collapse;
-}
 
 .divSide1 {
     position: relative;
@@ -270,6 +141,26 @@ body {
     color: #ffffff;
     text-align: center;
     cursor: pointer;
+}
+
+.divSide1, .divSide2, .divSide3, .divSide4, .divSide5, .divSide6, .divSide7 {
+    position: relative; /* already true, but must remain true */
+}
+
+/* show a "dirty dot" */
+.divSide1[data-dirty="1"]::after,
+.divSide3[data-dirty="1"]::after,
+.divSide6[data-dirty="1"]::after,
+.divSide7[data-dirty="1"]::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;       /* auto flips for white/black themes */
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.35);
 }
 
 .divTitleBreakDown {

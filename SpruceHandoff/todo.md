@@ -58,7 +58,7 @@
 
 \## Spritesheet Window Mechanics
 
-* \[✴️] Add a move button for the selected sprite to move to another cell, or should the user just be able to drag the sprite over to the new cell?
+* \[✅] Move sprites across the spritesheet with the mouse.
 
 
 

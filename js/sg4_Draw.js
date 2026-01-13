@@ -6,7 +6,7 @@ function requestRedraw() {
 function drawAll() {
     // Each if-statement will check to see if this is the initial drawing of WebApp or if the Window is active and
     // the Window is visible, then draw its contents.
-    if (isWindowActive(0, true)) {
+    if (isWindowActive(0, true) || forceDrawWorkingGridOnce) {
         if (firstDraw || gridFullDirty) {
             syncCanvasToGrid();
             redrawGridOverlay();
@@ -24,7 +24,7 @@ function drawAll() {
 
 
         drawPreviewUpdate();
-
+        forceDrawWorkingGridOnce = false;
         //drawGridFast();
 
     }
@@ -579,9 +579,9 @@ function flipHorizontally() {
         }
     }
     grid = flipped;
-    requestGridOutputRefresh();
     requestGridFullRedraw();
-    markSheetStaticDirty();
+    requestGridOutputRefresh();
+    //markSheetStaticDirty();
     requestRerender();
 }
 
@@ -601,9 +601,9 @@ function flipVertically() {
         }
     }
     grid = flipped;
-    requestGridOutputRefresh();
     requestGridFullRedraw();
-    markSheetStaticDirty();
+    requestGridOutputRefresh();
+    //markSheetStaticDirty();
     requestRerender();
 }
 
@@ -952,18 +952,21 @@ function drawSpriteAssetIntoSheet_V2(spriteAsset, xPx, yPx, cellPx) {
 function startSelectionAnim() {
     if (selAnimOn) return;
     selAnimOn = true;
+    requestRerender(); // kick the main loop
 
-    function tick() {
+    /*function tick() {
         if (!selAnimOn) return;
         selDashOffset = (selDashOffset + 0.13) % 12; // speed
         requestRerender(); // or drawSpriteSheetCanvasUpdateV2()
         requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
+    requestAnimationFrame(tick);*/
 }
 
 function stopSelectionAnim() {
+    if (!selAnimOn) return;
     selAnimOn = false;
+    requestRerender(); // so the last frame draws without ants
 }
 
 function drawSelectionOutline() {

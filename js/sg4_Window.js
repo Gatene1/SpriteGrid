@@ -118,3 +118,13 @@ function openWindow(whichWindow) {
 function isWindowActive(index, checkForFirstDraw) {
     return windowZ[index] === 6 || (checkForFirstDraw && firstDraw);
 }
+
+function markDirty(whichWindow) {
+    if (!docState[whichWindow].dirty) docState[whichWindow].dirty = true;
+    updateDocChrome(whichWindow);
+}
+
+function clearDirty(whichWindow) {
+    if (docState[whichWindow].dirty) docState[whichWindow].dirty = false;
+    updateDocChrome(whichWindow);
+}

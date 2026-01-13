@@ -101,11 +101,11 @@ function parseOpenFile() {
         if (typeof gridHInput !== "undefined" && gridHInput) gridHInput.value = gridH;
         if (typeof gridSizeRangeText !== "undefined" && gridSizeRangeText) gridSizeRangeText.value = `${gridW} x ${gridH}`;
 
-        drawGrid();
         resetWorkingGridCellSizeDefault();
         redrawGridOverlay();
-        requestGridFullRedraw();
         scheduleGridOutputRefresh();
+        requestGridFullRedraw();
+        requestRerender();
 // Reset working-grid cell size to normal 24
         cellSize = 24;
         cellSizeRange.value = cellSize;
@@ -168,11 +168,11 @@ function parseOpenFile() {
         SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
 
         displayLegacyAlert = true;
-        drawGrid();
         resetWorkingGridCellSizeDefault();
         redrawGridOverlay();
-        requestGridFullRedraw();
         scheduleGridOutputRefresh();
+        requestGridFullRedraw();
+        requestRerender();
 // Reset working-grid cell size to normal 24
         cellSize = 24;
         cellSizeRange.value = cellSize;
@@ -199,7 +199,8 @@ function parseOpenFile() {
     SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
 
     displayLegacyAlert = true;
-    drawGrid();
+    requestGridFullRedraw();
+    requestRerender();
 // Reset working-grid cell size to normal 24
     cellSize = 24;
     cellSizeRange.value = cellSize;
@@ -390,7 +391,11 @@ async function openSingleDrawing() {
     // ✅ PNG path
     if (file.type === "image/png" || file.name.toLowerCase().endsWith(".png")) {
         await openPngToWorkingGrid(file);
-        titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
+
+        //titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
+        docState.grid.fileName = file.name;
+        clearDirty("grid");
+
         windowZRearrange(0);
         windowZRefresh();
         // Reset working-grid cell size to normal 24
@@ -407,7 +412,11 @@ async function openSingleDrawing() {
     parseOpenFile();
     await refreshGridOutput();
     openFileContents = "";
-    titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
+
+    //titleBar.innerHTML = "Working Grid - " + file.name + " &#x1F4C2;";
+    docState.grid.fileName = file.name;
+    clearDirty("grid");
+
     windowZRearrange(0);
     windowZRefresh();
 
@@ -426,8 +435,8 @@ async function openSingleDrawing() {
     cellSize = 24;
     cellSizeRange.value = cellSize;
     cSizeRangeText.value = cellSize + " Pixels";
-    requestGridFullRedraw();
-    markSheetStaticDirty();
+    //requestGridFullRedraw();
+    //markSheetStaticDirty();
     requestRerender();
 }
 
@@ -506,6 +515,7 @@ async function saveSingleDrawingAsPNG(handle) {
 
 
 async function saveSingleDrawing() {
+    fileOptions.suggestedName = docState.grid.fileName;
     const saveFileHandle = await window.showSaveFilePicker(fileOptions);
     const fileName = saveFileHandle.name.toLowerCase();
 
@@ -524,11 +534,14 @@ async function saveSingleDrawing() {
         const jsonString = buildGatV3JsonString(false);
 
         await saveFileWritableStream.write(jsonString);
-        titleBar.innerHTML = "Working Grid - " + saveFileHandle.name + " &#x1F4C2;";
+        //titleBar.innerHTML = "Working Grid - " + saveFileHandle.name + " &#x1F4C2;";
+
         await saveFileWritableStream.close();
     } else if (fileName.endsWith(".png")) {
         await saveUint32GridAsPNG(saveFileHandle);
     }
+    docState.grid.fileName = saveFileHandle.name;
+    clearDirty("grid");
 }
 
 
@@ -551,7 +564,7 @@ async function spriteSheetSave() {
     }
 
     await sSheetFileWritableStream.write(fileData);
-    spriteTitleBar.innerHTML = "Sprite Sheet - " + sSheetFileHandle.name + " &#x1F4C2;";
+    spriteTitleBar.innerHTML = "Sprite Sheet Editor - " + sSheetFileHandle.name + " &#x1F4C2;";
     await sSheetFileWritableStream.close();
     spriteGridBlob = [];
     fileData = null;
@@ -769,4 +782,35 @@ async function openPngToWorkingGrid(file) {
     }
 
     firstDraw = true;
+}
+
+function updateDocChrome(kind) {
+    const s = docState[kind];
+    const star = s.dirty ? "*" : "";
+    const titleEl = document.getElementById(s.titleId);
+    const sideEl  = document.getElementById(s.sideId);
+    const labelPrefix = s.name;
+
+    // Title text example: "Working Grid - Unknown.gat* 📂"
+    titleEl.textContent = `${labelPrefix} - ${s.fileName}${star} \u{1F4C2}`;
+
+    // Side tab indicator is CSS-driven via attribute:
+    sideEl.dataset.dirty = s.dirty ? "1" : "0";
+}
+
+async function guardUnsaved(kind, labelPrefix, doNext) {
+    if (!docState[kind].dirty) return doNext();
+
+    const choice = await showUnsavedDialog(kind);
+    // choice: "save" | "nosave" | "cancel"
+
+    if (choice === "cancel") return;
+
+    if (choice === "save") {
+        const saved = await doSave(kind); // returns true/false (false if user cancels save)
+        if (!saved) return;               // user canceled save dialog
+    }
+
+    // either saved, or chose "nosave"
+    return doNext();
 }

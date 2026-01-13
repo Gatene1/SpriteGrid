@@ -55,6 +55,15 @@ function spriteSheetToWorkingGrid() {
     gridW = s.wPx | 0;
     gridH = s.hPx | 0;
 
+    gridWInput.value = gridW;
+    gridHInput.value = gridH;
+
+    if (gridW !== gridH) {
+        gridDimsLocked = false;
+        gridLockBtn.classList.toggle("linkOff", !gridDimsLocked);
+        gridLockBtn.setAttribute("aria-pressed", "false");
+    }
+
     allocGrid(gridW, gridH, false);
 
     // Copy pixels
@@ -68,10 +77,10 @@ function spriteSheetToWorkingGrid() {
     cSizeRangeText.value = cellSize + " Pixels";
 
     // Force visible refresh immediately (no “click inside window” required)
-    redrawGridOverlay();
+    //drawGrid();
+    forceDrawWorkingGridOnce = true;
     requestGridFullRedraw();
-    scheduleGridOutputRefresh();
-    drawGrid();
+    requestGridOutputRefresh();
     requestRerender();
 }
 
@@ -183,12 +192,12 @@ function trimTheWhitespace() {
     }
 
     // Redraw
-    scheduleGridOutputRefresh();
     //clearOffscreen();
     // redrawGridOverlay();
     requestGridFullRedraw();
+    scheduleGridOutputRefresh();
     //drawGrid?.();
-    markSheetStaticDirty();
+    //markSheetStaticDirty();
     requestRerender();
 
     if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
@@ -278,8 +287,9 @@ function bumpGrid(dx, dy) {
 
     //refreshGridOutput?.();
     requestGridFullRedraw();
+    requestGridOutputRefresh();
     // redrawGridOverlay();
-    markSheetStaticDirty();
+    //markSheetStaticDirty();
     requestRerender();
 
 }

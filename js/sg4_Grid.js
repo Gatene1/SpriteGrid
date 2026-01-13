@@ -50,6 +50,9 @@ function allocGrid(newW, newH, preserve = true) {
     gridH = newH;
     grid = next;
 
+    window.grid = grid;
+    window.gridTemp = new Uint32Array(gridW * gridH);
+
     // Update title / UI as needed
     if (typeof titleBar !== "undefined" && titleBar) {
         titleBar.innerHTML = `Working Grid - Unknown.gat &#x1F4C2; (${gridW}x${gridH})`;
@@ -91,6 +94,8 @@ function refreshGridOutput() {
 function zeroOutRefresh() {
     fillArrayWithZeroes();
     clearOffscreen();
+    docState.grid.fileName = "Unknown.gat";
+    clearDirty("grid");
     requestGridFullRedraw();
     redrawGridOverlay();
     void refreshGridOutput();
@@ -139,6 +144,7 @@ function RMB() {
     requestCellRedraw(idx);
     pendingGridOutputRefresh = true;
     requestRerender();
+    markDirty("grid");
 }
 
 
@@ -240,7 +246,8 @@ function applyNewGridDimensions() {
     scheduleGridOutputRefresh();
 
     requestGridFullRedraw();
-    markSheetStaticDirty();
+    requestGridOutputRefresh();
+    //markSheetStaticDirty();
     // redrawGridOverlay();
     requestRerender();
 }

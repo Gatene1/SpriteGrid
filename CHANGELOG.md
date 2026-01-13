@@ -518,3 +518,15 @@ Visual Polish
 - The shadow mentioned above for the drawing, I made it either green (for able to place there) or red (for not able to place there).
 - Gave the ability to move sprites around.
 - Added / removed code to make the WebApp flow more smoothly and less choppy.
+
+# 1/12/2026
+- Continued adding/removing code to make the WebApp flow more smoothly and less choppy by removing the setInterval() function call, and adding custom function calls that act the same, but do it with intent, not every frame.
+- Restored functionality to the undo and redo functions so it happens in realtime.
+
+# 1/13/2026
+- Added "dirty" system to the Working Grid, so whenever a change is made it would show up in the titlebar with a "*" next to the file name.
+- Similarly, the "dirty" sign would show up in the window's tab on the far left as a dot hovering over the tab.
+- Added logic to where saving/opening a file, or creating a new file would successfully get rid of the "dirty" status from the titlebar and the tab.
+- Made the file name of the current file show up in the save dialog box.
+- Added backend logic to question saving the current file when the user closes the window / opens another file, or creates a new file.
+- 
