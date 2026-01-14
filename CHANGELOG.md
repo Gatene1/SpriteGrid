@@ -529,4 +529,10 @@ Visual Polish
 - Added logic to where saving/opening a file, or creating a new file would successfully get rid of the "dirty" status from the titlebar and the tab.
 - Made the file name of the current file show up in the save dialog box.
 - Added backend logic to question saving the current file when the user closes the window / opens another file, or creates a new file.
-- 
+
+# 1/14/2026
+- Finished adding the "dirty" system to the Working Grid.
+- Changed the name of the "Color Selection" window to "Color Picker".
+- Changed the name of the "Load Palette" to "Open Palette" for consistency.
+- Added the same "dirty" system from the Working Grid to the Color Picker.
+- Rewrote the gss-spec.txt file to explain the metadata and color paradigm changes.

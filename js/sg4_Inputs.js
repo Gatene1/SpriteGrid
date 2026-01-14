@@ -1,6 +1,7 @@
 function saveToStore() {
     savedColorSquareArray.at(colorStoresSelected).colorHeld = currColor;
     colorStores[colorStoresSelected] = currColor;
+    markDirty("palette");
     drawColorSquares();
     //alert (currColor);
 
@@ -191,9 +192,7 @@ function trimTheWhitespace() {
         gridSizeRangeText.value = `${gridW} x ${gridH}`;
     }
 
-    // Redraw
-    //clearOffscreen();
-    // redrawGridOverlay();
+    markDirty("grid");
     requestGridFullRedraw();
     scheduleGridOutputRefresh();
     //drawGrid?.();
@@ -252,6 +251,7 @@ function levelUseSpriteChosen() {
 function bumpGrid(dx, dy) {
     // Guard rails
     if (!window.grid || !(window.grid instanceof Uint32Array)) return;
+    if (!isNotEmpty(1)) return;
 
     const w = gridW | 0;
     const h = gridH | 0;
@@ -285,6 +285,7 @@ function bumpGrid(dx, dy) {
     window.grid = dst;
     window.gridTemp = new Uint32Array(w * h);
 
+    markDirty("grid");
     //refreshGridOutput?.();
     requestGridFullRedraw();
     requestGridOutputRefresh();

@@ -562,6 +562,8 @@ function debugAction() {
 }
 
 function flipHorizontally() {
+    if (!isNotEmpty(1)) return;
+
     const flipped = new Uint32Array(grid.length);
     const gridWidth = gridW;
     const gridHeight = gridH;
@@ -579,6 +581,7 @@ function flipHorizontally() {
         }
     }
     grid = flipped;
+    markDirty("grid");
     requestGridFullRedraw();
     requestGridOutputRefresh();
     //markSheetStaticDirty();
@@ -586,6 +589,7 @@ function flipHorizontally() {
 }
 
 function flipVertically() {
+    if (!isNotEmpty(1)) return;
     const flipped = new Uint32Array(grid.length);
     const gridWidth = gridW;
     const gridHeight = gridH;
@@ -601,6 +605,7 @@ function flipVertically() {
         }
     }
     grid = flipped;
+    markDirty("grid");
     requestGridFullRedraw();
     requestGridOutputRefresh();
     //markSheetStaticDirty();

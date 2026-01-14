@@ -35,12 +35,13 @@ const fileOptions = {
 const palletteOptions = {
     id: "spritegrid-save",
     types: [{
-        description: "GAT Palette Files",
+        description: "GPT Palette Files",
         accept: {
             "text/parameters": [".gpt"],
         },
     }, ],
     excludeAcceptAllOption: false,
+    suggestedName: "ColorPalette",
     multiple: false,
 };
 
@@ -52,6 +53,7 @@ const spriteSheetOptions = {
         },
     }, ],
     excludeAcceptAllOption: true,
+    suggestedName: "SpriteSheet",
     multiple: false,
 };
 
@@ -446,8 +448,10 @@ async function loadPalletteFile() {
     const file = await fileHandle.getFile();
     openPaletteContents = await file.text();
     parsePaletteFile();
+    palletteOptions.suggestedName = file.name;
+    docState.palette.fileName = file.name;
+    clearDirty("palette");
     openPaletteContents = "";
-    colorTitleBar.innerHTML = "Color Selection - " + file.name + " &#x1F4C2;";
     if (displayLegacyAlert) {
         alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
         displayLegacyAlert = false;
@@ -482,7 +486,10 @@ async function savePalletteFile() {
 
     const saveFileBlob = new Blob([fileData], { type: "text/plain" });
     await saveFileWritableStream.write(saveFileBlob);
-    colorTitleBar.innerHTML = "Color Selection - " + saveFileHandle.name + " &#x1F4C2;";
+    palletteOptions.suggestedName = saveFileHandle.name;
+    docState.palette.fileName = saveFileHandle.name;
+    clearDirty("palette");
+    colorTitleBar.innerHTML = "Color Picker - " + saveFileHandle.name + " &#x1F4C2;";
     await saveFileWritableStream.close();
 }
 
@@ -792,7 +799,9 @@ function updateDocChrome(kind) {
     const labelPrefix = s.name;
 
     // Title text example: "Working Grid - Unknown.gat* 📂"
-    titleEl.textContent = `${labelPrefix} - ${s.fileName}${star} \u{1F4C2}`;
+    titleEl.textContent =
+        `${labelPrefix} - ${s.fileName}${star} \u{1F4C2}` +
+        `${s.name === "Working Grid" ? ` (${gridW}x${gridH})` : ""}`;
 
     // Side tab indicator is CSS-driven via attribute:
     sideEl.dataset.dirty = s.dirty ? "1" : "0";

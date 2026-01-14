@@ -1,155 +1,135 @@
-SpriteGrid SpriteSheet File Spec — .gss (Sprite Sheet)
-=====================================================
+SG4GSS Sprite Sheet Specification (.gss)
+================================
 
-Purpose
--------
-A .gss file stores a SpriteGrid “Sprite Sheet”: a grid of fixed-size logical cells,
-where each sprite may occupy multiple cells.
+Overview
+--------
+.gss files store sprite sheets for SpriteGrid 4.0+.
 
-SpriteGrid v4 stores .gss as a text format:
-  MAGIC | JSON | PAYLOAD
+The format is a hybrid:
+- Text-based
+- Structured JSON header
+- Delimited payload
 
-File Type
----------
-Extension: .gss
-Encoding: UTF-8 text
-Line Endings: LF or CRLF (either is fine)
+This is a named, SpriteGrid-owned format.
 
-High-Level Layout
------------------
-The file is a single UTF-8 string with 3 sections separated by a single pipe (|):
+--------------------------------------------------
 
-  <MAGIC> "|" <JSON> "|" <PAYLOAD>
+FILE STRUCTURE
 
-MAGIC
------
-Must be exactly:
-  SG4GSS
+SG4GSS
+{JSON HEADER}
 
-JSON Section
-------------
-A JSON object describing the sheet and how to interpret the payload.
+PAYLOAD
+
+--------------------------------------------------
+
+MAGIC HEADER
+
+Line 1 must be:
+SG4GSS
+
+Used to validate file type before parsing.
+
+--------------------------------------------------
+
+JSON HEADER
+
+The JSON block ends at the first blank line.
 
 Required fields:
 
-1) format (string)
-   Must be "GSS".
+{
+  "format": "GSS",
+  "version": 1,
+  "sheet": {
+    "cols": <int>,
+    "rows": <int>,
+    "baseCellPx": <int>,
+    "colorParadigm": "RGBA",
+    "colorPacking": "0xRRGGBBAA"
+  }
+}
 
-2) version (number)
-   Must be >= 4.
+Optional fields:
 
-3) meta (object)
-   Required keys:
-   - createdUtc (string, ISO 8601 UTC)
-   - updatedUtc (string, ISO 8601 UTC)
+{
+  "name": "<string>",
+  "notes": "<string>",
+  "createdUtc": "<ISO-8601>",
+  "updatedUtc": "<ISO-8601>"
+}
 
-4) sheet (object)
-   Required keys:
-   - cols       (number)  Sheet width in logical cells (cell = 16x16 sprite pixels)
-   - rows       (number)  Sheet height in logical cells
-   - cellPx     (number)  Logical cell size in sprite pixels. Must be 16.
-   - encoding   (string)  Must be "RGBA32"
-   - packing    (string)  Must be "0xRRGGBBAA"
-   Optional keys (recommended):
-   - name       (string)  Display name (no filesystem assumptions)
-   - app        (string)  "SpriteGrid"
-   - appVersion (string)
-   - uiZoom     (number)  UI-only scale factor for display (ex: 1 or 2)
-   - notes      (string)
+--------------------------------------------------
 
-JSON Delimiter Rule
--------------------
-Because section delimiters are pipes (|), any JSON string value MUST NOT contain
-a raw pipe character. If needed, store a pipe as an escaped unicode sequence:
-  "\u007C"
+COLOR PARADIGM
 
-PAYLOAD Section
----------------
-The payload stores TWO lists:
-1) Sprites (pixel data)
-2) Placements (where sprites sit in the sheet grid)
+- Sprite pixels are stored as unsigned 32-bit integers
+- Channel order is defined by `colorParadigm`
+- Packing format is defined by `colorPacking`
+- Pixel value 0 always represents full transparency
 
-The two lists are pipe-separated and labeled:
+Example (RGBA):
+- 0xFF0000FF = solid red
+- 0x00000000 = transparent
 
-  SPRITES:<count>|<sprite0>|...|<spriteN-1>|PLACEMENTS:<count>|<pl0>|...|<plM-1>
+--------------------------------------------------
 
-SPRITES List
-------------
-Each sprite record stores pixel data once.
+PAYLOAD
 
-Sprite record format:
-  P:<id>:<wPx>:<hPx>:<values>
+Payload blocks are pipe-delimited and appear in fixed order:
 
-Where:
-- <id>  is a non-negative integer unique within the file.
-- <wPx> is sprite width in pixels
-- <hPx> is sprite height in pixels
-- <values> is a comma-separated list of unsigned 32-bit integers (base-10),
-  length MUST equal wPx*hPx.
-- Pixel packing is RGBA32 in 0xRRGGBBAA (decimal representation).
-- 0 means fully transparent (0x00000000).
+SPRITES:<count>|
+PLACEMENTS:<count>|
+META:<count>|   (optional)
 
-Example sprite (2x2):
-  P:0:2:2:0,4294967295,4294967295,0
+--------------------------------------------------
 
-PLACEMENTS List
----------------
-Each placement record places a sprite onto the sheet cell grid.
+SPRITES BLOCK
 
-Placement record format:
-  L:<id>:<xCell>:<yCell>:<rot>
+SPRITES:<count>|
+S:<id>:<wPx>:<hPx>:<pixelCount>:<pixel0>,<pixel1>,...
 
-Where:
-- <id>   is a sprite id defined in the SPRITES list
-- <xCell> is the sprite's top-left column in sheet cells
-- <yCell> is the sprite's top-left row in sheet cells
-- <rot>  is rotation in degrees: 0, 90, 180, 270
+Rules:
+- IDs are sequential on save (0..n-1)
+- Pixels are base-10 representations of packed 32-bit values
 
-Rotation Policy (SpriteGrid v4 default)
----------------------------------------
-In SpriteGrid v4, rotation is expected to change the sprite pixel data itself.
-Therefore writers SHOULD store <rot> as 0 and physically rotate pixel data in the
-SPRITES record when the user rotates a sprite.
+--------------------------------------------------
 
-<rot> is reserved for potential future "placement-only rotation" support.
+PLACEMENTS BLOCK
 
-Occupancy Rules
----------------
-- Logical cell size is 16x16 sprite pixels (sheet.cellPx must be 16).
-- A sprite occupies:
-    wCells = wPx / 16
-    hCells = hPx / 16
-  Therefore wPx and hPx MUST be multiples of 16 for v4.
+PLACEMENTS:<count>|
+P:<spriteId>:<xCell>:<yCell>:<wCells>:<hCells>:<rot>
 
-- Placements MUST NOT overlap (no two sprites may occupy the same sheet cell).
-- Placements MUST be fully in bounds:
-    0 <= xCell, yCell
-    xCell + wCells <= sheet.cols
-    yCell + hCells <= sheet.rows
+Rules:
+- A sprite ID may appear multiple times
+- rot must be 0 for v4 writers
+- Readers must tolerate non-zero rot
 
-Validation Rules
-----------------
-A reader should reject the file if:
-- MAGIC is not "SG4GSS"
-- JSON cannot be parsed
-- JSON.format != "GSS"
-- JSON.version < 4
-- sheet.cols/rows missing or not positive integers
-- sheet.cellPx != 16
-- Any sprite record is not "P:id:wPx:hPx:values"
-- Any placement record is not "L:id:xCell:yCell:rot"
-- values length != wPx*hPx
-- Any value is not a valid unsigned 32-bit integer (0..4294967295)
-- Any placement refers to a missing sprite id
-- Any placement overlaps another placement
-- Any placement is out of bounds
-- Any wPx or hPx is not divisible by 16
+--------------------------------------------------
 
-Example
--------
-SG4GSS|
-{"format":"GSS","version":4,"meta":{"createdUtc":"2026-01-07T00:00:00Z","updatedUtc":"2026-01-07T00:00:00Z"},"sheet":{"cols":10,"rows":6,"cellPx":16,"encoding":"RGBA32","packing":"0xRRGGBBAA","uiZoom":2,"name":"Example Sheet"}}|
-SPRITES:1|
-P:0:32:16:0,0,0,0,...|
-PLACEMENTS:1|
-L:0:0:0:0
+META BLOCK (optional)
+
+META:<count>|
+M:<spriteId>:<name>:<notes>
+
+String escaping:
+- \| = literal pipe
+- \\ = literal backslash
+- \n = newline
+
+--------------------------------------------------
+
+ID COMPACTION
+
+- Runtime editing may create sparse IDs
+- On save, IDs are compacted
+- Placements and metadata remap automatically
+
+--------------------------------------------------
+
+INTEGRITY (future)
+
+Optional checksum or hash may be added.
+Readers should ignore unknown fields.
+
+--------------------------------------------------

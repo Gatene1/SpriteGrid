@@ -7,7 +7,7 @@
 * \[✴️] Resize Windows
 * \[✴️] Add a help feature, and a first-run tutorial of sorts.
 * \[] Whenever opening a new file, clearing the contents of a window, or closing a window, there should be a dialog box that asks about saving.
-* \[] Remove the "Color Converter" window, or at least rename and repurpose it.
+* \[✅] Remove the "Color Converter" window, or at least rename and repurpose it.
 
 
 
@@ -27,6 +27,7 @@
 * \[✅] Added support for ALT + Mouse Wheel combo while in the Working Grid, to increase/decrease the size of the individual grid cells.
 * \[✅] Added padding to the Working Grid's Menu.
 * \[✅] Add Undo/Redo support only for the Working Grid in coloring cells.
+* \[✅] Make a "dirty" system for when changes are made to the Working Grid.
 
 
 
@@ -37,9 +38,11 @@
 
 
 
-\## Color Selection Window Mechanics
+\## Color Picker Window Mechanics
 
-* \[] Fix stroke around the color squares and preview square.
+* \[✅] Fix stroke around the color squares and preview square.
+* \[✅] Change the name of the window to "Color Picker".
+* \[✅] Make a "dirty" system for when changes are made to the Color Picker's color palette.
 
 
 
@@ -59,12 +62,13 @@
 \## Spritesheet Window Mechanics
 
 * \[✅] Move sprites across the spritesheet with the mouse.
+* \[] Make a "dirty" system for when changes are made to the Sprite Sheet.
 
 
 
-\## Color Converters Window Mechanics
+\## Options Menu Window Mechanics
 
-* \[✴️] Renaming window to "Options" or something akin
+* \[✅] Renaming window to "Options" or something akin
 * \[] Add the tutorial button iconset
 * \[] Add the functionality to the tutorial button iconset.
 
@@ -78,13 +82,14 @@
 * \[] Add magnifying buttons to be able to zoom out and zoom in to see more/less of the level.
 * \[] Add button to add a screen to the north, east, south, west
 * \[] Add functionality to scroll throughout the level, instead of just one screen.
+* \[] Make a "dirty" system for when changes are made to the Level Editor's workspace.
 
 
 
 \## Uncategorized Mechanics
 
 * \[] Be able to save window formation locations (layout saving).
-* \[❓] Have an Undo function (Maybe have a history of 4 deep?)
+* \[✅] Have an Undo function (Maybe have a history of 4 deep?)
 * \[✅] make the gat-spec.txt file for information about the .gat file type.
 * \[✅] make the gss-spec.txt file for information about the .gss file type.
 * \[] make the gle-spec.txt file for information about the .gle file type.

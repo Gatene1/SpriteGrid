@@ -88,6 +88,8 @@ function tryPlaceMouseSpriteAtCellIndex(idx) {
     }
 
     addSpriteFromMouse(mouseSprite, x, y);
+    markDirty("sprites");
+
     exitImportMode();
     requestRerender();
     return true;
@@ -218,6 +220,7 @@ function commitSpriteMove() {
     moveHasTarget = false;
     movePreviewOk = false;
 
+    markDirty("sprites");
     requestRerender();
 }
 

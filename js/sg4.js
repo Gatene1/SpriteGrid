@@ -114,8 +114,8 @@ var previewSelect = document.getElementById("previewSelect");
 // Vars for every window
 const docState = {
     grid:      { name: "Working Grid", fileName: "Unknown.gat", dirty: false, sideId: "divSide1", titleId: "titleBarHW" },
-    palette:   { name: "Color Selection", fileName: "Unknown.gpt", dirty: false, sideId: "divSide3", titleId: "colorTitleBar" },
-    sprites:   { name: "Sprite Sheet Editor", fileName: "Unknown.gss", dirty: false, sideId: "divSide6", titleId: "spriteTitleBar" },
+    palette:   { name: "Color Picker", fileName: "Unknown.gpt", dirty: false, sideId: "divSide3", titleId: "colorTitleBarHW" },
+    sprites:   { name: "Sprite Sheet Editor", fileName: "Unknown.gss", dirty: false, sideId: "divSide6", titleId: "spriteTitleBarHW" },
     level:     { name: "Level Editor", fileName: "Unknown.gle", dirty: false, sideId: "divSide7", titleId: "levelTitleBar" },
 };
 var windowZ = [6, 0, 1, 2, 3, -1, -1];
@@ -500,6 +500,7 @@ window.onload = function() {
         if (isMod && !e.shiftKey && e.key.toLowerCase() === "z") {
             e.preventDefault();
             if (historyUndo()) {
+                markDirty("grid");
                 requestGridFullRedraw();
                 pendingGridOutputRefresh = true;
                 scheduleGridOutputRefresh();
@@ -512,6 +513,7 @@ window.onload = function() {
         if (isMod && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) {
             e.preventDefault();
             if (historyRedo()) {
+                markDirty("grid");
                 requestGridFullRedraw();
                 pendingGridOutputRefresh = true;
                 scheduleGridOutputRefresh();

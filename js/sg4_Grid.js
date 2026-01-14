@@ -120,6 +120,7 @@ function changeCellColor() {
     historySetCell(idx, next); // Adds the color to the history.
     //grid[idx] = next;
 
+    markDirty("grid");
     requestCellRedraw(idx);
     pendingGridOutputRefresh = true;
     requestRerender();
@@ -206,7 +207,7 @@ function isNotEmpty(whichArray) {
     switch (whichArray) {
         case 1:
             for (i = 0; i < grid.length; i++) {
-                if (grid[i] != "0" && grid[i] != null) returnValue = true;
+                if (grid[i] !== 0 && grid[i] != null) return true;
             }
             break;
         case 4:
@@ -245,6 +246,7 @@ function applyNewGridDimensions() {
     allocGrid(w, h, true);   // preserve pixels (crop/pad)
     scheduleGridOutputRefresh();
 
+    markDirty("grid");
     requestGridFullRedraw();
     requestGridOutputRefresh();
     //markSheetStaticDirty();
@@ -397,6 +399,7 @@ function changeCellSizeByWheel(e) {
                cSizeRangeText.value = cellSize.toString() + " Pixels";
                cellSizeRange.value = cellSize;
                requestGridFullRedraw();
+               requestRerender();
            }
        } else if (e.deltaY > 0) { // If scrolled down with the mouse wheel.
            if (cellSize > 2) {
@@ -404,6 +407,7 @@ function changeCellSizeByWheel(e) {
                cSizeRangeText.value = cellSize.toString() + " Pixels";
                cellSizeRange.value = cellSize;
                requestGridFullRedraw();
+               requestRerender();
            }
        }
     }
