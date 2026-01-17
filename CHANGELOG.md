@@ -536,3 +536,12 @@ Visual Polish
 - Changed the name of the "Load Palette" to "Open Palette" for consistency.
 - Added the same "dirty" system from the Working Grid to the Color Picker.
 - Rewrote the gss-spec.txt file to explain the metadata and color paradigm changes.
+
+# 1/15/2026, 1/16/2026
+- Finished adding the "dirty" system to the Sprite Sheet editor.
+- Added the logic to the Sprite Sheet editor for the open and save buttons.
+- Changed and added to the "Placement Lists" section of the gss-spec.txt file.
+- Added a Uint32 text box below the Hex String text box and an accompanying copy-to-clipboard button.
+- Added "Color Format" section to the Color Picker, and added the 4 options as radio button choices.
+- Wired the logic for the said choices.
+- Building the logic behind changing the color format, and the changes to various outputs to show the changes.

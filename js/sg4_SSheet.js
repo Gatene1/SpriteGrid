@@ -65,7 +65,9 @@ function addSpriteFromMouse(mouse, x, y) {
         wCells: mouse.wCells,
         hCells: mouse.hCells,
         xCell: x,
-        yCell: y
+        yCell: y,
+        name: "",
+        notes: ""
     });
 
     stampRect(x, y, mouse.wCells, mouse.hCells, id);
@@ -89,7 +91,7 @@ function tryPlaceMouseSpriteAtCellIndex(idx) {
 
     addSpriteFromMouse(mouseSprite, x, y);
     markDirty("sprites");
-
+    
     exitImportMode();
     requestRerender();
     return true;
@@ -103,6 +105,7 @@ function eraseSpriteById(id) {
     sprites[id] = null;
 
     selectedSprites.delete(id);
+    markDirty("sprites");
     markSheetStaticDirty();
     requestRerender();
     if (selectedSpriteId === id) selectedSpriteId = -1;

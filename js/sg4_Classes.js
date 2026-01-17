@@ -25,3 +25,10 @@ class levelEditorMap {
         this.levelGrid = levelGrid;
     }
 }
+
+const ColorFormat = Object.freeze({
+    RGBA: 0,
+    BGRA: 1,
+    ARGB: 2,
+    ABGR: 3
+});

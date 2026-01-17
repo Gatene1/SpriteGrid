@@ -151,9 +151,9 @@
                     <canvas id="colorPrev" width="85px" height="85px"></canvas>
                 </div>
                 <div id="colorTextbox" class="input-group-sm">
-                    <input type="text" id="colorTextElement" value="#00ff00ff">&nbsp;<span id="copyColorCode">&#128203;</span>
+                    <input type="text" id="colorTextElement" value="#00ff00ff" name="hex">&nbsp;<span id="copyColorCode">&#128203;</span>
+                    <input type="text" id="colorTextElementUint32" value="4278255360" name="uint32"> <span id="copyColorCodeUint32">&#128203;</span>
                 </div>
-                <br>
                 <div> <button type="button" id="saveButton" class="btn btn-success">Save to Palette</button></div>
             </div>
             <div id="colorChoose">
@@ -161,7 +161,14 @@
             </div>
             <div>
                 <button class="btn btn-success" id="loadPalletteButton">Open Palette</button><br><br>
-                <button class="btn btn-success" id="savePalletteButton">Save Palette</button>
+                <button class="btn btn-success" id="savePalletteButton">Save Palette</button><br><br>
+                <b><u>Color Format</u></b><br>
+                <fieldset id="colorFormatGroup">
+                    <input type = "radio" id="colorFormatRGBA" name="colorFormat" value="0"> <label for="colorFormatRGBA">RGBA &rarr; Std</label><br>
+                    <input type = "radio" id="colorFormatBGRA" name="colorFormat" value="1" CHECKED> <label for="colorFormatBGRA">BGRA &rarr; Native</label><br>
+                    <input type = "radio" id="colorFormatARGB" name="colorFormat" value="2"> <label for="colorFormatARGB">ARGB</label><br>
+                    <input type = "radio" id="colorFormatABGR" name="colorFormat" value="3"> <label for="colorFormatABGR">ABGR</label><br>
+                </fieldset>
             </div>
         </div>
     </div>

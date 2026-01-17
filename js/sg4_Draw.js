@@ -206,7 +206,7 @@ function drawGridFromRequest(gridElement) {
 }
 
 function drawPreviewSquare(dimensions) {
-    drawSquare(2, 2, dimensions, dimensions, true, uint32ToHex8(currColor), 1, GRID_BORDER_COLOR, true, true);
+    drawSquare(2, 2, dimensions, dimensions, true, colorPicker.color.hexString, 1, GRID_BORDER_COLOR, true, true);
 }
 
 function drawText (whatToSay, x, y, fontSize, fontColor, canvasChoice = canvasGridCTX) {

@@ -1,0 +1,135 @@
+SG4GSS Sprite Sheet Specification (.gss)
+================================
+
+Overview
+--------
+.gss files store sprite sheets for SpriteGrid 4.0+.
+
+The format is a hybrid:
+- Text-based
+- Structured JSON header
+- Delimited payload
+
+This is a named, SpriteGrid-owned format.
+
+--------------------------------------------------
+
+FILE STRUCTURE
+
+SG4GSS
+{JSON HEADER}
+
+PAYLOAD
+
+--------------------------------------------------
+
+MAGIC HEADER
+
+Line 1 must be:
+SG4GSS
+
+Used to validate file type before parsing.
+
+--------------------------------------------------
+
+JSON HEADER
+
+The JSON block ends at the first blank line.
+
+Required fields:
+
+{
+  "format": "GSS",
+  "version": 1,
+  "sheet": {
+    "cols": <int>,
+    "rows": <int>,
+    "baseCellPx": <int>,
+    "colorParadigm": "RGBA",
+    "colorPacking": "0xRRGGBBAA"
+  }
+}
+
+Optional fields:
+
+{
+  "name": "<string>",
+  "notes": "<string>",
+  "createdUtc": "<ISO-8601>",
+  "updatedUtc": "<ISO-8601>"
+}
+
+--------------------------------------------------
+
+COLOR PARADIGM
+
+- Sprite pixels are stored as unsigned 32-bit integers
+- Channel order is defined by `colorParadigm`
+- Packing format is defined by `colorPacking`
+- Pixel value 0 always represents full transparency
+
+Example (RGBA):
+- 0xFF0000FF = solid red
+- 0x00000000 = transparent
+
+--------------------------------------------------
+
+PAYLOAD
+
+Payload blocks are pipe-delimited and appear in fixed order:
+
+SPRITES:<count>|
+PLACEMENTS:<count>|
+META:<count>|   (optional)
+
+--------------------------------------------------
+
+SPRITES BLOCK
+
+SPRITES:<count>|
+S:<id>:<wPx>:<hPx>:<pixelCount>:<pixel0>,<pixel1>,...
+
+Rules:
+- IDs are sequential on save (0..n-1)
+- Pixels are base-10 representations of packed 32-bit values
+
+--------------------------------------------------
+
+PLACEMENTS BLOCK
+
+PLACEMENTS:<count>|
+P:<spriteId>:<xCell>:<yCell>:<wCells>:<hCells>:<rot>
+
+Rules:
+- A sprite ID may appear multiple times
+- rot must be 0 for v4 writers
+- Readers must tolerate non-zero rot
+
+--------------------------------------------------
+
+META BLOCK (optional)
+
+META:<count>|
+M:<spriteId>:<name>:<notes>
+
+String escaping:
+- \| = literal pipe
+- \\ = literal backslash
+- \n = newline
+
+--------------------------------------------------
+
+ID COMPACTION
+
+- Runtime editing may create sparse IDs
+- On save, IDs are compacted
+- Placements and metadata remap automatically
+
+--------------------------------------------------
+
+INTEGRITY (future)
+
+Optional checksum or hash may be added.
+Readers should ignore unknown fields.
+
+--------------------------------------------------

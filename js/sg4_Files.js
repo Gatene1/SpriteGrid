@@ -57,6 +57,284 @@ const spriteSheetOptions = {
     multiple: false,
 };
 
+// ─────────────────────────────────────────────
+// .gss (SG4GSS) Sprite Sheet v4 helpers
+// Spec: gss-spec.txt
+// Format: SG4GSS|{json header}|SPRITES:<n>|P:...|...|PLACEMENTS:<n>|L:...|...|META:<n>|M:...|
+// ─────────────────────────────────────────────
+
+// SpriteGrid v4 native (current engine) channel order.
+// IMPORTANT: This MUST match how SpriteGrid already interprets Uint32 colors.
+// If a file declares a different paradigm, we convert on load.
+const SG4_NATIVE_COLOR_PARADIGM = "BGRA";
+
+function sg4SwapRB(u32) {
+    // Swap red and blue channels for 0xRRGGBBAA <-> 0xBBGGRRAA (alpha stays lowest byte).
+    const v = (u32 >>> 0);
+    const rr = (v & 0xFF000000) >>> 24;
+    const gg = (v & 0x00FF0000) >>> 16;
+    const bb = (v & 0x0000FF00) >>> 8;
+    const aa = (v & 0x000000FF);
+    return ((bb << 24) | (gg << 16) | (rr << 8) | aa) >>> 0;
+}
+
+function gssEscape(str) {
+    // Payload is '|' delimited at file level and ':' delimited within records.
+    // We avoid cleverness: only escape what would break parsing.
+    return String(str ?? "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\|/g, "\\|")
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "");
+}
+
+function gssUnescape(str) {
+    // Reverse of gssEscape.
+    return String(str ?? "")
+        .replace(/\\n/g, "\n")
+        .replace(/\\\|/g, "|")
+        .replace(/\\\\/g, "\\");
+}
+
+function buildGssV4String() {
+    const now = (typeof SG4 !== "undefined" && SG4.utcNowIso) ? SG4.utcNowIso() : new Date().toISOString();
+
+    // Build compaction map (sprites[] may contain null holes after deletes)
+    const oldToNew = new Map();
+    const compactSprites = [];
+    for (let oldId = 0; oldId < sprites.length; oldId++) {
+        const s = sprites[oldId];
+        if (!s) continue;
+        const newId = compactSprites.length;
+        oldToNew.set(oldId, newId);
+        compactSprites.push(s);
+    }
+
+    // Header (JSON segment)
+    const header = {
+        format: "GSS",
+        version: 4,
+        sheet: {
+            cols: sheetCols | 0,
+            rows: sheetRows | 0,
+            cellPx: BASE_CELL_PX | 0,
+            // NOTE: SpriteGrid's current native interpretation matches BGRA.
+            // (We spent real pain discovering this — do not casually change it.)
+            encoding: "BGRA32",
+            packing: "0xBBGGRRAA",
+            colorParadigm: SG4_NATIVE_COLOR_PARADIGM // future: user-selectable (Color Picker)
+        },
+        meta: {
+            createdUtc: (SG4?.gssMeta?.createdUtc ?? now),
+            updatedUtc: now
+        }
+    };
+    SG4.gssMeta ??= { createdUtc: header.meta.createdUtc };
+
+    const parts = [];
+    parts.push("SG4GSS");
+    parts.push(JSON.stringify(header));
+
+    // SPRITES
+    parts.push(`SPRITES:${compactSprites.length}`);
+    for (let newId = 0; newId < compactSprites.length; newId++) {
+        const s = compactSprites[newId];
+        const wPx = s.wPx | 0;
+        const hPx = s.hPx | 0;
+        const values = Array.from(s.pixels ?? []);
+        const expected = wPx * hPx;
+        if (values.length !== expected) {
+            console.warn(`GSS save: sprite ${newId} pixel length mismatch (expected ${expected}, got ${values.length}).`);
+        }
+        // P:id:wPx:hPx:val0,val1,val2...
+        parts.push(`P:${newId}:${wPx}:${hPx}:${values.join(",")}`);
+    }
+
+    // PLACEMENTS (current editor model = one placement per sprite)
+    parts.push(`PLACEMENTS:${compactSprites.length}`);
+    for (let oldId = 0; oldId < sprites.length; oldId++) {
+        const s = sprites[oldId];
+        if (!s) continue;
+        const newId = oldToNew.get(oldId);
+        if (newId == null) continue;
+        // L:id:xCell:yCell:rot
+        parts.push(`L:${newId}:${s.xCell | 0}:${s.yCell | 0}:0`);
+    }
+
+    // META (optional)
+    const metaEntries = [];
+    for (let oldId = 0; oldId < sprites.length; oldId++) {
+        const s = sprites[oldId];
+        if (!s) continue;
+        const newId = oldToNew.get(oldId);
+        if (newId == null) continue;
+        const name = (s.name ?? "").toString();
+        const notes = (s.notes ?? "").toString();
+        if (!name && !notes) continue;
+        metaEntries.push(`M:${newId}:${gssEscape(name)}:${gssEscape(notes)}`);
+    }
+    if (metaEntries.length) {
+        parts.push(`META:${metaEntries.length}`);
+        parts.push(...metaEntries);
+    }
+
+    // Trailing pipe is fine (easier for writers)
+    return parts.join("|") + "|";
+}
+
+function parseGssV4String(text) {
+    const raw = String(text ?? "");
+    if (!raw.startsWith("SG4GSS|")) {
+        throw new Error("Not an SG4GSS file");
+    }
+
+    const segs = raw.split("|");
+    // segs[0] = SG4GSS, segs[1] = json
+    const headerJson = segs[1];
+    let header;
+    try { header = JSON.parse(headerJson); }
+    catch { throw new Error("Invalid SG4GSS header JSON"); }
+
+    if (header?.format !== "GSS") throw new Error("SG4GSS header missing format=GSS");
+    if ((header?.version | 0) !== 4) console.warn("GSS: non-v4 file; attempting best-effort parse.");
+
+    const cols = header?.sheet?.cols | 0;
+    const rows = header?.sheet?.rows | 0;
+    if (cols < 1 || rows < 1) throw new Error("Invalid sheet dimensions in header");
+
+    // Color paradigm (channel order).
+    // Default to engine native if missing.
+    const fileParadigm = (header?.sheet?.colorParadigm ?? header?.sheet?.encoding ?? SG4_NATIVE_COLOR_PARADIGM).toString().toUpperCase();
+    const needsSwapRB = (fileParadigm === "RGBA" || fileParadigm === "RGBA32") && SG4_NATIVE_COLOR_PARADIGM === "BGRA";
+
+    // Reset + allocate
+    allocSheet(cols, rows);
+    SG4.gssMeta ??= { createdUtc: null };
+    SG4.gssMeta.createdUtc = header?.meta?.createdUtc ?? SG4.gssMeta.createdUtc ?? null;
+
+    // Walk payload segments
+    let i = 2;
+    const spritesById = new Map();
+    const placementsRaw = [];
+    const metaById = new Map();
+
+    while (i < segs.length) {
+        const seg = segs[i];
+        if (!seg) { i++; continue; }
+
+        if (seg.startsWith("SPRITES:")) {
+            i++;
+            while (i < segs.length && segs[i] && !segs[i].startsWith("PLACEMENTS:") && !segs[i].startsWith("META:")) {
+                const rec = segs[i];
+                if (rec.startsWith("P:")) {
+                    const parts = rec.split(":");
+                    const id = parts[1] | 0;
+                    const wPx = parts[2] | 0;
+                    const hPx = parts[3] | 0;
+                    const valuesStr = parts.slice(4).join(":"); // just in case
+                    let values = valuesStr ? valuesStr.split(",").map(v => (parseInt(v, 10) >>> 0)) : [];
+
+                    // Convert file -> engine native if needed.
+                    if (needsSwapRB && values.length) {
+                        values = values.map(sg4SwapRB);
+                    }
+                    spritesById.set(id, { id, wPx, hPx, pixels: values });
+                }
+                i++;
+            }
+            continue;
+        }
+
+        if (seg.startsWith("PLACEMENTS:")) {
+            i++;
+            while (i < segs.length && segs[i] && !segs[i].startsWith("META:")) {
+                const rec = segs[i];
+                if (rec.startsWith("L:")) {
+                    const parts = rec.split(":");
+                    const id = parts[1] | 0;
+                    const xCell = parts[2] | 0;
+                    const yCell = parts[3] | 0;
+                    const rot = parts[4] | 0;
+                    placementsRaw.push({ id, xCell, yCell, rot });
+                }
+                i++;
+            }
+            continue;
+        }
+
+        if (seg.startsWith("META:")) {
+            i++;
+            while (i < segs.length) {
+                const rec = segs[i];
+                if (!rec) { i++; continue; }
+                if (rec.startsWith("M:")) {
+                    const parts = rec.split(":");
+                    const id = parts[1] | 0;
+                    const name = gssUnescape(parts[2] ?? "");
+                    const notes = gssUnescape(parts.slice(3).join(":") ?? "");
+                    metaById.set(id, { name, notes });
+                    i++;
+                    continue;
+                }
+                // Unknown record → ignore
+                i++;
+            }
+            continue;
+        }
+
+        // Unknown segment → ignore
+        i++;
+    }
+
+    // Build runtime sprites array.
+    // NOTE: Current editor model only supports 1 placement per sprite-id.
+    // If a file has multiple placements for the same sprite-id, we clone it into new sprite IDs.
+    sprites = [];
+    selectedSprites.clear();
+    selectedSpriteId = -1;
+    hoveredSpriteId = -1;
+
+    // Sort placements by original sprite id, then y/x for stable ordering
+    placementsRaw.sort((a, b) => (a.id - b.id) || (a.yCell - b.yCell) || (a.xCell - b.xCell));
+
+    for (const plc of placementsRaw) {
+        const src = spritesById.get(plc.id);
+        if (!src) continue;
+
+        const id = sprites.length;
+        const meta = metaById.get(plc.id) ?? { name: "", notes: "" };
+
+        // Compute cell footprint from px dims (ceil to cell)
+        const wCells = Math.max(1, Math.ceil((src.wPx | 0) / BASE_CELL_PX));
+        const hCells = Math.max(1, Math.ceil((src.hPx | 0) / BASE_CELL_PX));
+
+        // Best-effort: if invalid placement, skip
+        if (!canPlaceRect(plc.xCell, plc.yCell, wCells, hCells)) {
+            console.warn(`GSS load: cannot place sprite ${plc.id} at ${plc.xCell},${plc.yCell} (occupied/out of bounds). Skipping.`);
+            continue;
+        }
+
+        const s = {
+            id,
+            wPx: src.wPx | 0,
+            hPx: src.hPx | 0,
+            pixels: src.pixels.map(v => v >>> 0),
+            wCells,
+            hCells,
+            xCell: plc.xCell | 0,
+            yCell: plc.yCell | 0,
+            name: meta.name ?? "",
+            notes: meta.notes ?? ""
+        };
+
+        sprites.push(s);
+        stampRect(s.xCell, s.yCell, s.wCells, s.hCells, id);
+    }
+
+    markSheetStaticDirty();
+    requestRerender();
+}
+
 
 function resetWorkingGridCellSizeDefault() {
     cellSize = 24;
@@ -263,18 +541,78 @@ function parseSpriteGrid() {
 }
 
 async function parseSSheetFile() {
-    // Clean up existing grid
-    spriteGrid = [];
+    // v4+ (current)
+    const t = String(openSSheetContents ?? "");
+    if (t.startsWith("SG4GSS|")) {
+        try {
+            parseGssV4String(t);
+            displayLegacyAlert = false;
+            return;
+        } catch (e) {
+            alert(`Invalid .gss file:\n\n${e.message}`);
+            return;
+        }
+    }
 
-    if (openSSheetContents.startsWith("SSHEET0")) {
+    // Legacy fallback: SSHEET0 / older (grid-of-icons). We convert to the v2 runtime model.
+    // NOTE: this path exists so old files don't become landfill.
+    spriteGrid = [];
+    if (t.startsWith("SSHEET0")) {
         parseSSheetFile_Modern();
     } else {
         await parseSSheetFile_Legacy();
     }
+
+    // Convert legacy spriteGrid[] -> sprites[] placements (best-effort)
+    allocSheet(sheetCols, sheetRows);
+    sprites = [];
+    selectedSprites.clear();
+    selectedSpriteId = -1;
+    hoveredSpriteId = -1;
+
+    let nextX = 0, nextY = 0;
+    for (let idx = 0; idx < spriteGrid.length; idx++) {
+        const icon = spriteGrid[idx];
+        if (!icon) continue;
+
+        const wPx = icon.sizeOfGrid | 0;
+        const hPx = icon.sizeOfGrid | 0;
+        const pixels = (icon.gridColors ?? []).map(v => (v >>> 0));
+
+        // Find next free 1x1 spot
+        while (nextY < sheetRows && !canPlaceRect(nextX, nextY, 1, 1)) {
+            nextX++;
+            if (nextX >= sheetCols) { nextX = 0; nextY++; }
+        }
+        if (nextY >= sheetRows) break;
+
+        const id = sprites.length;
+        const s = {
+            id,
+            wPx,
+            hPx,
+            pixels,
+            wCells: 1,
+            hCells: 1,
+            xCell: nextX,
+            yCell: nextY,
+            name: "",
+            notes: ""
+        };
+        sprites.push(s);
+        stampRect(nextX, nextY, 1, 1, id);
+
+        nextX++;
+        if (nextX >= sheetCols) { nextX = 0; nextY++; }
+    }
+
+    displayLegacyAlert = true;
     if (displayLegacyAlert) {
-        alert("This file was saved in an older version of SpriteGrid.\nIt is recommended to save with the new format. before continuing further.");
+        alert("This sprite sheet was saved in an older version of SpriteGrid.\nIt is recommended to save it in the new .gss format.");
         displayLegacyAlert = false;
     }
+    markSheetStaticDirty();
+    requestRerender();
 }
 
 function parseSSheetFile_Modern() {
@@ -459,12 +797,29 @@ async function loadPalletteFile() {
     drawColorSquares();
 }
 
-async function openSpriteSheet() {
+// NOTE: sg4.js expects this name for the unsaved-changes guard.
+function actuallyNewSpriteSheet() {
+    // createNewSpriteSheet() lives in sg4_Inputs.js and is the canonical reset.
+    createNewSpriteSheet();
+    docState.sprites.fileName = "Unknown.gss";
+    spriteSheetOptions.suggestedName = "SpriteSheet";
+    clearDirty("sprites");
+    spriteTitleBar.innerHTML = "Sprite Sheet - " + docState.sprites.fileName + " &#x1F4C2;";
+}
+
+// NOTE: sg4.js expects these names for the unsaved-changes guard.
+async function actuallyOpenSpriteSheet() {
     const [openSSheetFileHandle] = await window.showOpenFilePicker(spriteSheetOptions);
     const openSSheetFile = await openSSheetFileHandle.getFile();
     openSSheetContents = await openSSheetFile.text();
-    parseSSheetFile();
+
+    await parseSSheetFile();
     openSSheetContents = "";
+
+    spriteSheetOptions.suggestedName = openSSheetFile.name;
+    docState.sprites.fileName = openSSheetFile.name;
+    clearDirty("sprites");
+
     spriteTitleBar.innerHTML = "Sprite Sheet - " + openSSheetFile.name + " &#x1F4C2;";
     openWindow(5);
     windowZRearrange(5);
@@ -472,6 +827,11 @@ async function openSpriteSheet() {
 
     markSheetStaticDirty();
     requestRerender();
+}
+
+// Back-compat name (in case anything still calls it)
+async function openSpriteSheet() {
+    return actuallyOpenSpriteSheet();
 }
 
 async function savePalletteFile() {
@@ -554,27 +914,18 @@ async function saveSingleDrawing() {
 
 
 async function spriteSheetSave() {
+    spriteSheetOptions.suggestedName = docState.sprites.fileName;
     const sSheetFileHandle = await window.showSaveFilePicker(spriteSheetOptions);
     const sSheetFileWritableStream = await sSheetFileHandle.createWritable();
 
-    parseSpriteGrid();
-
-    let fileData = "SSHEET" + "0"; // header + inside joke padding
-
-    for (let i = 0; i < spriteGridBlob.length; i++) {
-        const sprite = spriteGridBlob[i];
-        if (sprite === null) {
-            fileData += "|null";
-        } else {
-            fileData += "|" + spriteGridBlob[i];
-        }
-    }
-
+    const fileData = buildGssV4String();
     await sSheetFileWritableStream.write(fileData);
-    spriteTitleBar.innerHTML = "Sprite Sheet Editor - " + sSheetFileHandle.name + " &#x1F4C2;";
     await sSheetFileWritableStream.close();
-    spriteGridBlob = [];
-    fileData = null;
+
+    spriteSheetOptions.suggestedName = sSheetFileHandle.name;
+    docState.sprites.fileName = sSheetFileHandle.name;
+    clearDirty("sprites");
+    spriteTitleBar.innerHTML = "Sprite Sheet - " + sSheetFileHandle.name + " &#x1F4C2;";
 
     requestRerender();
 }

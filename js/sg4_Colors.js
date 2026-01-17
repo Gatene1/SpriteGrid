@@ -17,28 +17,26 @@ function findWhereClicked() {
     })
 }
 
-function copyColorToClipboard() {
-    const text = document.getElementById('colorTextElement').value;
+function copyColorToClipboard(num) {
+    const text = document.getElementById(num == 1 ? 'colorTextElement' : 'colorTextElementUint32').value;
     navigator.clipboard.writeText(text)
         .catch( err => {
             alert('Failure to Copy');
         });
 }
 
-function rgbToUint(rgbObject) {
-    // default alpha to 1 if missing
-    let a = (rgbObject.a ?? 1);
+function rgbToUint(rgb) {
+    let a = rgb.a ?? 1;
+    if (a > 1) a /= 255;
 
-    // normalize if someone hands us 0–255 instead of 0–1
-    if (a > 1) a = a / 255;
-
-    const A = (Math.round(a * 255) & 255) << 24;
-    const B = (rgbObject.b & 255) << 16;
-    const G = (rgbObject.g & 255) << 8;
-    const R = (rgbObject.r & 255);
-
-    return (A | B | G | R);
+    return packRGBA(
+        rgb.r & 255,
+        rgb.g & 255,
+        rgb.b & 255,
+        Math.round(a * 255) & 255
+    );
 }
+
 
 function abgrToUint(rgbObject) {
     return ((rgbObject.r) * 255 << 24) | (rgbObject.g << 16) | (rgbObject.b<< 8) | rgbObject.a;
@@ -168,4 +166,29 @@ function hex8ToAABBGGRR(hex) {
     const bb = parseInt(hex.slice(4,6),16) & 255;
     const aa = parseInt(hex.slice(6,8),16) & 255;
     return (aa<<24) | (bb<<16) | (gg<<8) | rr;
+}
+
+function packRGBA(r, g, b, a, format = sg4.ColorParadigm) {
+    switch (format) {
+        case ColorFormat.RGBA:
+            return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
+
+        case ColorFormat.BGRA:
+            return ((b << 24) | (g << 16) | (r << 8) | a) >>> 0;
+
+        case ColorFormat.ARGB:
+            return ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
+
+        case ColorFormat.ABGR:
+            return ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
+    }
+}
+
+function rgbaToHex8(r, g, b, a) {
+    let r2 = parseInt(rgba.r).toString(16).padStart(2, 0);
+    let g2 = parseInt(rgba.g).toString(16).padStart(2, 0);
+    let b2 = parseInt(rgba.b).toString(16).padStart(2, 0);
+    let a2 = Math.round((rgba.a * 255)).toString(16).padStart(2, 0);
+
+    return r2 + g2 + b2 + a2;
 }

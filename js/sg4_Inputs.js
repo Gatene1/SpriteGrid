@@ -13,9 +13,16 @@ function previewScale() {
     requestRerender();
 }
 
-function colorText() {
-    currColor = colorTextElement.value;
-    colorPicker.color.hex8String = currColor;
+function colorText(e) {
+    let colorToUse = colorPicker.color.rgba;
+    let hToR = uIntToRgba(hex8ToUint32(e.target.value));
+    currColor = packRGBA(hToR.r, hToR.g, hToR.b, hToR.a);
+    colorPicker.color.rgba = currColor;
+    if (e.target.name === "hex")
+        colorTextElementUint32.value = rgbToUint(hToR);
+    else if (e.target.name === "uint32")
+        colorTextElement.value = uint32ToHex8(e.target.value);
+
 }
 
 function workingGridToMouseSprite() {

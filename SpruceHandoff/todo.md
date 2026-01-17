@@ -7,7 +7,6 @@
 * \[✴️] Resize Windows
 * \[✴️] Add a help feature, and a first-run tutorial of sorts.
 * \[] Whenever opening a new file, clearing the contents of a window, or closing a window, there should be a dialog box that asks about saving.
-* \[✅] Remove the "Color Converter" window, or at least rename and repurpose it.
 
 
 
@@ -62,7 +61,14 @@
 \## Spritesheet Window Mechanics
 
 * \[✅] Move sprites across the spritesheet with the mouse.
-* \[] Make a "dirty" system for when changes are made to the Sprite Sheet.
+* \[✅] Make a "dirty" system for when changes are made to the Sprite Sheet.
+* \[✅] When importing sprites, sprites can take up multiple cells, and are centered across the cells they do.
+* \[✅] When importing, a shadow (green or red) will appear over the cells that it will occupy.
+* \[✅] When importing, a shadow (green or red) will appear over the cells that it will occupy.
+* \[✅] Implement "Open Sprite Sheet" button's logic.
+* \[✅] Implement "Save Sprite Sheet" button's logic.
+* \[✅] Implement "New Sprite Sheet" button's logic.
+* \[✅] Implement "Erase A Cell" button's logic.
 
 
 

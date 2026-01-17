@@ -1,6 +1,5 @@
-// Each level 15 (only 13 are used) sprites tall and 17 wide, canvas is 578 pixels tall, so each pixel can be 38 pixels square
-// So, pixelsPerUnit for the level will be 2.
-// Vars for Web App
+window.sg4 = window.sg4 ?? {};
+
 const FRAMES_PER_SECOND = 30;
 const CANVAS_GRID_WIDTH = 775;
 const CANVAS_GRID_HEIGHT = 775;
@@ -35,6 +34,8 @@ var trimWhitespace = document.getElementById("trimWhitespace");
 window.redrawQueued = false;
 window.BgColor = 4294967295;
 window.showBgBool = false;
+sg4.ColorParadigm = ColorFormat.BGRA;
+let colorFormatGroup = document.getElementById("colorFormatGroup");
 
 let gridW = 16;
 let gridH = 16;
@@ -99,6 +100,7 @@ var colorPicker = new iro.ColorPicker('#picker', {
 });
 var currColor = hex8ToUint32(colorPicker.color.hex8String);
 var colorTextElement = document.getElementById("colorTextElement");
+var colorTextElementUint32 = document.getElementById("colorTextElementUint32");
 var colorStores = [4278255360, 4278190335, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR];
 var colorStoresSelected = 0;
 var colorStoresSquareSize = 24;
@@ -211,6 +213,7 @@ var saveButton = document.getElementById("saveButton");
 var loadPalletteButton = document.getElementById('loadPalletteButton');
 var savePalletteButton = document.getElementById('savePalletteButton');
 let copyColorCode = document.getElementById('copyColorCode');
+let copyColorCodeUint32 = document.getElementById('copyColorCodeUint32');
 window.alphaPattern = null;
 
 
@@ -533,13 +536,20 @@ window.onload = function() {
         }
     });
 
+    colorFormatGroup.addEventListener('change', (e) => {
+        if (e.target.name !== "colorFormat") return;
+        sg4.ColorParadigm = Number(e.target.value);
+    });
+
 
 
     // Listeners for the Color Iro.js
     colorPicker.on('color:change', function(color) {
         const rgba = color.rgba;
         currColor = rgbToUint(rgba);
-        colorTextElement.value = uint32ToHex8(currColor);
+        const rToHex = rgbaToHex8(rgba.r, rgba.g, rgba.b, rgba.a);
+        colorTextElement.value = rToHex.toUpperCase();
+        colorTextElementUint32.value = currColor >>> 0;
         drawPreviewSquare(100);
     });
 
@@ -649,9 +659,11 @@ window.onload = function() {
     colorChooseRow1.addEventListener('mousemove', gridUpdateMousePosColorChoose, true);
     saveButton.addEventListener('click', saveToStore, true);
     colorTextElement.addEventListener('change', colorText, true);
+    colorTextElementUint32.addEventListener('change', colorText, true);
     loadPalletteButton.addEventListener('click', loadPalletteFile, true);
     savePalletteButton.addEventListener('click', savePalletteFile, true);
-    copyColorCode.addEventListener('click', copyColorToClipboard, true);
+    copyColorCode.addEventListener('click', () => copyColorToClipboard(1), true);
+    copyColorCodeUint32.addEventListener('click', () => copyColorToClipboard(2), true);
 
     // Listeners for Fourth Window (Output)
     outLittleWindow.addEventListener('mousedown', outLittleWindowClick, false);
@@ -690,11 +702,13 @@ window.onload = function() {
     // openSSheet.addEventListener('click', openSpriteSheet, true);
     // newSSheet.addEventListener('click', createNewSpriteSheet, true);
     openSSheet.addEventListener("click", () => {
-        guardUnsaved("sprites", "SpriteSheet", actuallyOpenSpriteSheet);
+        //guardUnsaved("sprites", "SpriteSheet", actuallyOpenSpriteSheet);
+        actuallyOpenSpriteSheet();
     });
 
     newSSheet.addEventListener("click", () => {
-        guardUnsaved("sprites", "SpriteSheet", actuallyNewSpriteSheet);
+       // guardUnsaved("sprites", "SpriteSheet", actuallyNewSpriteSheet);
+        actuallyNewSpriteSheet();
     });
 
 

@@ -326,9 +326,10 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divInnerBottomFlex41 {
     display: flex;
+    margin-top: 0;
     flex-direction: column;
-    align-content: center;
-    text-align: center;
+    align-content: flex-start;
+    width: 50%;
 }
 
 .spriteRightButtonDiv {
@@ -390,7 +391,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 }
 
 #cellSizeRangeText {
-    width: 7rem;
+    width: 8.3rem;
     font-weight: bold;
 }
 
@@ -399,7 +400,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 }
 
 #colorChoose {
-    width: 30%;
+    width: 20%;
     text-align: center;
 }
 
@@ -409,6 +410,10 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
     border: solid 2px black;
     margin-bottom: 3px;
+}
+
+#saveButton {
+    margin-left: 15%;
 }
 
 #saveButton,
@@ -450,15 +455,26 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
     margin-right: auto;
 }
 
+#colorPreviewSquare {
+    margin-top: 0;
+}
+
+#colorPrev {
+    margin-left: 20%;
+}
+
 #colorTextbox {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
     margin-left: 5px;
 }
 
-#colorTextElement {
+#colorTextElement, #colorTextElementUint32 {
     width: 150px;
+    margin-bottom: 0;
 }
 
-#copyColorCode {
+#copyColorCode, #copyColorCodeUint32 {
     cursor: pointer;
 }
 
