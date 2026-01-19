@@ -14,16 +14,30 @@ function previewScale() {
 }
 
 function colorText(e) {
-    let colorToUse = colorPicker.color.rgba;
-    let hToR = uIntToRgba(hex8ToUint32(e.target.value));
-    currColor = packRGBA(hToR.r, hToR.g, hToR.b, hToR.a);
-    colorPicker.color.rgba = currColor;
-    if (e.target.name === "hex")
-        colorTextElementUint32.value = rgbToUint(hToR);
-    else if (e.target.name === "uint32")
-        colorTextElement.value = uint32ToHex8(e.target.value);
+    if (e.target.name !== "uint32") return;
+    if (sg4.StateMachine !== State.NORMAL) return;
 
+    sg4.StateMachine = State.EDIT_UINT32_BOX;
+
+    const u32 = parseU32Text(e.target.value);
+    if (u32 === null) {
+        sg4.StateMachine = State.NORMAL;
+        return;
+    }
+
+
+    // Convert FROM selected format → native
+    currColor = formatUint32ToNative(u32, sg4.ColorParadigm);
+
+    const bytes = unpackNative(currColor);
+
+    colorPicker.color.set(bytesToIro(bytes));
+    colorTextElement.value = bytesToHex8(bytes);
+
+    drawPreviewSquare(100);
+    sg4.StateMachine = State.NORMAL;
 }
+
 
 function workingGridToMouseSprite() {
     // must contain something

@@ -1,6 +1,6 @@
 // This block of code will allow the SG4 object to exist regardless of the order of the <scripts> in the HTML file.
-/*window.SG4 ??= {};
-const SG4 = window.SG4;
+/*window.sg4 ??= {};
+const SG4 = window.sg4;
 SG4.gatMeta ??= { createdUtc: null };
 SG4.utcNowIso ??= () => new Date().toISOString();*/
 // End Nullish Coalescing stuff
@@ -1025,7 +1025,7 @@ async function saveWorkingGridAsPNG(handle) {
         }
 
         // Use your existing converter so PNG matches the app’s colors exactly.
-        const hex = uint32ToHex8(v);           // should be "#RRGGBBAA"
+        const hex = nativeToHex8(v);           // should be "#RRGGBBAA"
         const [r, g, b, a] = hex8ToRgbaBytes(hex);
 
         const di = i * 4;
@@ -1061,7 +1061,7 @@ async function saveUint32GridAsPNG(handle, pixelsU32 = grid, w = gridW, h = grid
             continue;
         }
 
-        const hex = uint32ToHex8(v); // your “source of truth”
+        const hex = nativeToHex8(v); // your “source of truth”
         let s = hex.startsWith("#") ? hex.slice(1) : hex;
         if (s.length === 6) s += "FF";
 

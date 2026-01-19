@@ -206,7 +206,7 @@ function drawGridFromRequest(gridElement) {
 }
 
 function drawPreviewSquare(dimensions) {
-    drawSquare(2, 2, dimensions, dimensions, true, colorPicker.color.hexString, 1, GRID_BORDER_COLOR, true, true);
+    drawSquare(2, 2, dimensions, dimensions, true, colorPicker.color.rgbaString, 1, GRID_BORDER_COLOR, true, true);
 }
 
 function drawText (whatToSay, x, y, fontSize, fontColor, canvasChoice = canvasGridCTX) {
@@ -277,7 +277,7 @@ function drawPreviewUpdate() {
             }
 
             drawSquare(j * prevCellSize + 2, i * prevCellSize + 2, prevCellSize, prevCellSize, false,
-                uint32ToHex8(currCellColor), 3);
+                nativeToHex8(currCellColor), 3);
         }
     }
 
@@ -745,7 +745,7 @@ function drawSpriteSheetCanvasUpdateV2() {
                 spriteCellSize,
                 spriteCellSize,
                 true,
-                uint32ToHex8(color),
+                uint32nativeToHex8(color),
                 4
             );
         }
@@ -788,7 +788,7 @@ function drawSpriteSheetCanvasUpdateV2() {
                     scale,
                     scale,
                     false,
-                    uint32ToHex8(v),
+                    nativeToHex8(v),
                     4
                 );
             }
@@ -825,7 +825,7 @@ function drawSpriteSheetCanvasUpdateV2() {
         if (!r) return;
         ctx.save();
         ctx.globalAlpha = 0.35;
-        ctx.fillStyle = uint32ToHex8(colorUint);
+        ctx.fillStyle = nativeToHex8(colorUint);
         ctx.fillRect(r.x * spriteCellSize, r.y * spriteCellSize, r.w * spriteCellSize, r.h * spriteCellSize);
         ctx.restore();
     }
@@ -872,7 +872,7 @@ function drawSpriteSheetCanvasUpdateV2() {
                     pxSize,
                     pxSize,
                     false,
-                    uint32ToHex8(v),
+                    nativeToHex8(v),
                     4
                 );
             }
@@ -906,7 +906,7 @@ function drawSpriteIntoSheetCell_V2(spriteObj, cellX, cellY, cellPx) {
     for (let i = 0; i < g * g; i++) {
         const v = colors[i] >>> 0;
         if (v !== 0) {
-            drawSquare(ox, oy, pxScale, pxScale, false, uint32ToHex8(v), 4);
+            drawSquare(ox, oy, pxScale, pxScale, false, nativeToHex8(v), 4);
         }
 
         col++;
@@ -946,7 +946,7 @@ function drawSpriteAssetIntoSheet_V2(spriteAsset, xPx, yPx, cellPx) {
         for (let px = 0; px < wPx; px++) {
             const v = pixels[row + px] >>> 0;
             if (v !== 0) {
-                drawSquare(ox, oy, pxScale, pxScale, false, uint32ToHex8(v), 4);
+                drawSquare(ox, oy, pxScale, pxScale, false, nativeToHex8(v), 4);
             }
             ox += pxScale;
         }

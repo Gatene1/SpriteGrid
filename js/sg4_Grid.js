@@ -112,7 +112,7 @@ function changeCellColor() {
     if (rmbDown) return;
 
     const idx = gridIndex(gx, gy);
-    const next = (currColor == "#f5f5f580") ? 0 : rgbToUint(colorPicker.color.rgba);
+    const next = currColor >>> 0; // canonical already
 
     if (grid[idx] === next) return;
 
@@ -159,10 +159,20 @@ function RMBRelease() {
 }
 
 function siphonColor() {
-    currColor = grid[mouseToGrid] == 0 ? 16777215 : grid[mouseToGrid];
-    colorPicker.color.hexString = uint32ToHex8(currColor);
+    const v = grid[mouseToGrid] >>> 0;
+    if (v === 0) return;
+
+    currColor = v;
+
+    const bytes = unpackNative(v);
+    colorPicker.color.set(bytesToIro(bytes));
+
+    colorTextElement.value = bytesToHex8(bytes);
+    colorTextElementUint32.value = String(nativeToFormatUint32(v, sg4.ColorParadigm));
+
     drawPreviewSquare(100);
 }
+
 
 
 function addToSpriteGrid(whichTool) {
@@ -285,7 +295,7 @@ function redrawGridFast() {
         if (v === 0) {
             gridImageU32[i] = 0; // transparent
         } else {
-            const hex = uint32ToHex8(v);           // your “truth”
+            const hex = nativeToHex8(v);           // your “truth”
             gridImageU32[i] = hex8ToAABBGGRR(hex); // canvas order
         }
     }

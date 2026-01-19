@@ -32,3 +32,9 @@ const ColorFormat = Object.freeze({
     ARGB: 2,
     ABGR: 3
 });
+
+const State = Object.freeze({
+    NORMAL: 0,
+    EDIT_HEX_BOX: 1,
+    EDIT_UINT32_BOX: 2
+});

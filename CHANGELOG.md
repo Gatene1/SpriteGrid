@@ -545,3 +545,9 @@ Visual Polish
 - Added "Color Format" section to the Color Picker, and added the 4 options as radio button choices.
 - Wired the logic for the said choices.
 - Building the logic behind changing the color format, and the changes to various outputs to show the changes.
+
+# 1/17/2026
+- Continued building the logic behind changing the color format. 
+
+# 1/18/2026
+- Continued building the logic behind changing the color format.

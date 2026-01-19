@@ -271,7 +271,7 @@ function rebuildSheetStaticLayer() {
                 spriteCellSize,
                 spriteCellSize,
                 true,
-                uint32ToHex8(SPRITE_GRID_FILL_COLOR),
+                nativeToHex8(SPRITE_GRID_FILL_COLOR),
                 GRID_BORDER_COLOR,
                 true,
                 false
@@ -313,7 +313,7 @@ function ensureSpriteRenderCache(s, scale) {
         for (let x = 0; x < s.wPx; x++) {
             const v = s.pixels[y * s.wPx + x] >>> 0;
             if (!v) continue;
-            cctx.fillStyle = uint32ToHex8(v);
+            cctx.fillStyle = nativeToHex8(v);
             cctx.fillRect(x * scale, y * scale, scale, scale);
         }
     }

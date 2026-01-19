@@ -34,9 +34,10 @@ var trimWhitespace = document.getElementById("trimWhitespace");
 window.redrawQueued = false;
 window.BgColor = 4294967295;
 window.showBgBool = false;
-sg4.ColorParadigm = ColorFormat.BGRA;
+window.sg4.ColorParadigm = ColorFormat.BGRA;
+window.sg4.StateMachine = State.NORMAL;
+const NATIVE_FORMAT = ColorFormat.BGRA; // Locked spec “native”
 let colorFormatGroup = document.getElementById("colorFormatGroup");
-
 let gridW = 16;
 let gridH = 16;
 let imgData = null;
@@ -162,11 +163,11 @@ const bumpRight = document.getElementById("bumpRight");
 //let dimsLinked = true;
 let gridDimsLocked = true;
 
-window.SG4 ??= {};
-const SG4 = window.SG4;
-SG4.gatMeta ??= { createdUtc: null };
+window.sg4 ??= {};
+const sg4 = window.sg4;
+sg4.gatMeta ??= { createdUtc: null };
 
-SG4.utcNowIso = function utcNowIso() {
+sg4.utcNowIso = function utcNowIso() {
     return new Date().toISOString();
 };
 
@@ -538,20 +539,29 @@ window.onload = function() {
 
     colorFormatGroup.addEventListener('change', (e) => {
         if (e.target.name !== "colorFormat") return;
-        sg4.ColorParadigm = Number(e.target.value);
+        sg4.ColorParadigm = parseInt(e.target.value);
     });
 
 
 
     // Listeners for the Color Iro.js
     colorPicker.on('color:change', function(color) {
-        const rgba = color.rgba;
-        currColor = rgbToUint(rgba);
-        const rToHex = rgbaToHex8(rgba.r, rgba.g, rgba.b, rgba.a);
-        colorTextElement.value = rToHex.toUpperCase();
-        colorTextElementUint32.value = currColor >>> 0;
-        drawPreviewSquare(100);
+        if (sg4.StateMachine === State.NORMAL) {
+            const bytes = iroToBytes(color.rgba);
+
+            // canonical internal
+            currColor = packNative(bytes.r, bytes.g, bytes.b, bytes.aByte);
+
+            // hex is ALWAYS #RRGGBBAA
+            colorTextElement.value = bytesToHex8(bytes);
+
+            // uint32 shows chosen paradigm but derived from canonical
+            colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
+            drawPreviewSquare(100);
+        }
     });
+
+
 
 
 
@@ -658,7 +668,15 @@ window.onload = function() {
     colorChooseRow1.addEventListener('click', activateColor, true);
     colorChooseRow1.addEventListener('mousemove', gridUpdateMousePosColorChoose, true);
     saveButton.addEventListener('click', saveToStore, true);
-    colorTextElement.addEventListener('change', colorText, true);
+    colorTextElement.addEventListener("change", (e) => {
+        const bytes = hexToBytes(e.target.value);
+
+        currColor = packNative(bytes.r, bytes.g, bytes.b, bytes.aByte);
+        colorPicker.color.set(bytesToIro(bytes));
+
+        colorTextElementUint32.value =
+            nativeToFormatUint32(currColor, sg4.ColorParadigm);
+    });
     colorTextElementUint32.addEventListener('change', colorText, true);
     loadPalletteButton.addEventListener('click', loadPalletteFile, true);
     savePalletteButton.addEventListener('click', savePalletteFile, true);
@@ -678,8 +696,22 @@ window.onload = function() {
     fileTitleBar.addEventListener('mouseup', fileDivTitleUnClick, true);
     fileGearHW.addEventListener('mousedown', fileGearClick, true);
     fileCloseHW.addEventListener('mousedown', function() { closeWindow(4); }, true);
-    hexToUintButton.addEventListener('click', function() { alert(hex8ToUint32(hexToUintText.value)); }, true);
-    uintToHexButton.addEventListener('click', function() { alert(uint32ToHex8(uintToHexText.value)); }, true);
+    hexToUintButton.addEventListener("click", function () {
+        const bytes = hexToBytes(hexToUintText.value); // expects #RRGGBBAA
+        if (!bytes) { alert("Invalid hex"); return; }
+
+        const u32 = bytesToFormatUint32(bytes, sg4.ColorParadigm);
+        alert("0x" + u32.toString(16).padStart(8, "0").toUpperCase());
+    }, true);
+
+    uintToHexButton.addEventListener("click", function () {
+        const u32 = parseU32Text(uintToHexText.value);
+        if (u32 === null) { alert("Invalid uint32"); return; }
+
+        const bytes = formatUint32ToBytes(u32, sg4.ColorParadigm);
+        alert(bytesToHex8(bytes)); // ALWAYS #RRGGBBAA
+    }, true);
+
 
     // Listeners for Sixth Window (Sprite Sheet)
     spriteLittleWindow.addEventListener('mousedown', spriteLittleWindowClick, false);
