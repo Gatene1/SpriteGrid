@@ -1,8 +1,8 @@
-// This block of code will allow the SG4 object to exist regardless of the order of the <scripts> in the HTML file.
+// This block of code will allow the sg4 object to exist regardless of the order of the <scripts> in the HTML file.
 /*window.sg4 ??= {};
-const SG4 = window.sg4;
-SG4.gatMeta ??= { createdUtc: null };
-SG4.utcNowIso ??= () => new Date().toISOString();*/
+const sg4 = window.sg4;
+sg4.gatMeta ??= { createdUtc: null };
+sg4.utcNowIso ??= () => new Date().toISOString();*/
 // End Nullish Coalescing stuff
 
 const fileOptions = {
@@ -63,10 +63,22 @@ const spriteSheetOptions = {
 // Format: SG4GSS|{json header}|SPRITES:<n>|P:...|...|PLACEMENTS:<n>|L:...|...|META:<n>|M:...|
 // ─────────────────────────────────────────────
 
-// SpriteGrid v4 native (current engine) channel order.
-// IMPORTANT: This MUST match how SpriteGrid already interprets Uint32 colors.
+// SpriteGrid v4 **internal/native** (current engine) Uint32 channel order.
+// Canonical internal storage is 0xAABBGGRR (ABGR lens).
+// IMPORTANT: This MUST match how SpriteGrid already interprets Uint32 colors in memory.
 // If a file declares a different paradigm, we convert on load.
-const SG4_NATIVE_COLOR_PARADIGM = "BGRA";
+const SG4_NATIVE_COLOR_PARADIGM = "ABGR";
+
+function sg4ParadigmStringToColorFormat(s) {
+    const t = String(s ?? "").toUpperCase();
+    // Accept both plain and *32 encodings.
+    if (t === "RGBA" || t === "RGBA32") return ColorFormat.RGBA;
+    if (t === "BGRA" || t === "BGRA32") return ColorFormat.BGRA;
+    if (t === "ARGB" || t === "ARGB32") return ColorFormat.ARGB;
+    if (t === "ABGR" || t === "ABGR32") return ColorFormat.ABGR;
+    // Default to internal/native.
+    return ColorFormat.ABGR;
+}
 
 function sg4SwapRB(u32) {
     // Swap red and blue channels for 0xRRGGBBAA <-> 0xBBGGRRAA (alpha stays lowest byte).
@@ -97,7 +109,7 @@ function gssUnescape(str) {
 }
 
 function buildGssV4String() {
-    const now = (typeof SG4 !== "undefined" && SG4.utcNowIso) ? SG4.utcNowIso() : new Date().toISOString();
+    const now = (typeof sg4 !== "undefined" && sg4.utcNowIso) ? sg4.utcNowIso() : new Date().toISOString();
 
     // Build compaction map (sprites[] may contain null holes after deletes)
     const oldToNew = new Map();
@@ -121,15 +133,15 @@ function buildGssV4String() {
             // NOTE: SpriteGrid's current native interpretation matches BGRA.
             // (We spent real pain discovering this — do not casually change it.)
             encoding: "BGRA32",
-            packing: "0xBBGGRRAA",
+            packing: "0xAABBGGRR",
             colorParadigm: SG4_NATIVE_COLOR_PARADIGM // future: user-selectable (Color Picker)
         },
         meta: {
-            createdUtc: (SG4?.gssMeta?.createdUtc ?? now),
+            createdUtc: (sg4?.gssMeta?.createdUtc ?? now),
             updatedUtc: now
         }
     };
-    SG4.gssMeta ??= { createdUtc: header.meta.createdUtc };
+    sg4.gssMeta ??= { createdUtc: header.meta.createdUtc };
 
     const parts = [];
     parts.push("SG4GSS");
@@ -203,14 +215,15 @@ function parseGssV4String(text) {
     if (cols < 1 || rows < 1) throw new Error("Invalid sheet dimensions in header");
 
     // Color paradigm (channel order).
-    // Default to engine native if missing.
-    const fileParadigm = (header?.sheet?.colorParadigm ?? header?.sheet?.encoding ?? SG4_NATIVE_COLOR_PARADIGM).toString().toUpperCase();
-    const needsSwapRB = (fileParadigm === "RGBA" || fileParadigm === "RGBA32") && SG4_NATIVE_COLOR_PARADIGM === "BGRA";
+    // Default to engine internal/native if missing.
+    const fileParadigmStr = (header?.sheet?.colorParadigm ?? header?.sheet?.encoding ?? SG4_NATIVE_COLOR_PARADIGM).toString();
+    const fileFmt = sg4ParadigmStringToColorFormat(fileParadigmStr);
+    const needsRepack = (fileFmt !== ColorFormat.ABGR); // internal/native = ABGR (0xAABBGGRR)
 
     // Reset + allocate
     allocSheet(cols, rows);
-    SG4.gssMeta ??= { createdUtc: null };
-    SG4.gssMeta.createdUtc = header?.meta?.createdUtc ?? SG4.gssMeta.createdUtc ?? null;
+    sg4.gssMeta ??= { createdUtc: null };
+    sg4.gssMeta.createdUtc = header?.meta?.createdUtc ?? sg4.gssMeta.createdUtc ?? null;
 
     // Walk payload segments
     let i = 2;
@@ -234,9 +247,9 @@ function parseGssV4String(text) {
                     const valuesStr = parts.slice(4).join(":"); // just in case
                     let values = valuesStr ? valuesStr.split(",").map(v => (parseInt(v, 10) >>> 0)) : [];
 
-                    // Convert file -> engine native if needed.
-                    if (needsSwapRB && values.length) {
-                        values = values.map(sg4SwapRB);
+                    // Convert file -> engine internal/native (ABGR / 0xAABBGGRR) if needed.
+                    if (needsRepack && values.length) {
+                        values = values.map(v => formatUint32ToNative(v, fileFmt));
                     }
                     spritesById.set(id, { id, wPx, hPx, pixels: values });
                 }
@@ -445,7 +458,7 @@ function parseOpenFile() {
 
 
         // Legacy files have no createdUtc, so stamp "now" on first v3 save
-        SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
+        sg4.gatMeta.createdUtc = sg4.gatMeta.createdUtc ?? sg4.utcNowIso();
 
         displayLegacyAlert = true;
         resetWorkingGridCellSizeDefault();
@@ -476,7 +489,7 @@ function parseOpenFile() {
     if (typeof gridWInput !== "undefined") gridWInput.value = gridW;
     if (typeof gridHInput !== "undefined") gridHInput.value = gridH;
 
-    SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
+    sg4.gatMeta.createdUtc = sg4.gatMeta.createdUtc ?? sg4.utcNowIso();
 
     displayLegacyAlert = true;
     requestGridFullRedraw();
@@ -496,7 +509,7 @@ function parsePaletteFile() {
     const palString = openPaletteContents.substring(0, 3);
     const firstCharHex = openPaletteContents[0];
     // this is supposed to read the contents of the palette file, test if it's hexString array or typed array
-    // if it is hext string, then it needs to add a "ff" to the end of the read color, convert to uint32
+    // if it is hex string, then it needs to add a "ff" to the end of the read color, convert to uint32
     // store the uint32 version
 
     if (palString == "PAL") {
@@ -517,10 +530,13 @@ function parsePaletteFile() {
     } else if (firstCharHex === "#") {
         // Old Hex System
         for (openFilePointer = 0; openFilePointer < openPaletteContents.length; openFilePointer += filePointerProgressor) {
-            const thisSubString = openPaletteContents.substring(openFilePointer, openFilePointer + filePointerProgressor)
-            savedColorSquareArray[colorStoresLoc].colorHeld = rgbToUint(hexToRGB(thisSubString + "FF"));
-            colorStores[colorStoresLoc] = rgbToUint(hexToRGB(thisSubString + "FF"));
+            const thisSubString = openPaletteContents.substring(openFilePointer, openFilePointer + filePointerProgressor);
+            const hex8 = thisSubString + "FF";              // "#RRGGBBFF"
+            const native = hex8ToUint32(hex8) >>> 0; // returns 0xAABBGGRR native in your codebase
+            savedColorSquareArray[colorStoresLoc].colorHeld = native;
+            colorStores[colorStoresLoc] = native;
             colorStoresLoc++;
+           //alert(thisSubString);
         }
         displayLegacyAlert = true;
     } else {
@@ -542,7 +558,7 @@ function parseSpriteGrid() {
 
 async function parseSSheetFile() {
     // v4+ (current)
-    const t = String(openSSheetContents ?? "");
+    const t = String(openSSheetContents ?? "").trimStart();
     if (t.startsWith("SG4GSS|")) {
         try {
             parseGssV4String(t);
@@ -700,7 +716,10 @@ function parseSSheetFile_Legacy() {
                         fileGridGrid.push(0);
                         if (fileGridGrid.length < fileGridSize * fileGridSize) i += 1;
                     } else {
-                        fileGridGrid.push(rgbToUint(hexToRGB(openSSheetContents.substring(tempGridGridPointer, tempGridGridPointer + 7))))
+                        const hex8 = openSSheetContents.substring(tempGridGridPointer, tempGridGridPointer + 7) + "FF";
+                        const [r,g,b,aByte] = hex8ToRgbaBytes(hex8);
+                        fileGridGrid.push(packNative(r,g,b,aByte) >>> 0);
+
                         if (fileGridGrid.length < fileGridSize * fileGridSize) i += 7;
                         else i += 6;
                     }
@@ -897,7 +916,7 @@ async function saveSingleDrawing() {
             return;
         }
 
-        // Build JSON (preserves SG4.gatMeta.createdUtc automatically)
+        // Build JSON (preserves sg4.gatMeta.createdUtc automatically)
         const jsonString = buildGatV3JsonString(false);
 
         await saveFileWritableStream.write(jsonString);
@@ -931,16 +950,16 @@ async function spriteSheetSave() {
 }
 
 function buildGatV3JsonObject() {
-    const now = SG4.utcNowIso();
+    const now = sg4.utcNowIso();
 
     // Preserve createdUtc across saves
-    if (!SG4.gatMeta.createdUtc) SG4.gatMeta.createdUtc = now;
+    if (!sg4.gatMeta.createdUtc) sg4.gatMeta.createdUtc = now;
 
     return {
         format: "GAT",
         version: 3,
         meta: {
-            createdUtc: SG4.gatMeta.createdUtc,
+            createdUtc: sg4.gatMeta.createdUtc,
             updatedUtc: now
         },
         image: {
@@ -994,7 +1013,7 @@ function tryParseGatV3Json(text) {
     grid.set(data.values.map(v => v >>> 0));
 
     // Persist createdUtc for future saves
-    SG4.gatMeta.createdUtc = obj.meta?.createdUtc || SG4.gatMeta.createdUtc || SG4.utcNowIso();
+    sg4.gatMeta.createdUtc = obj.meta?.createdUtc || sg4.gatMeta.createdUtc || sg4.utcNowIso();
 
     return obj;
 }
@@ -1085,8 +1104,8 @@ async function openPngToWorkingGrid(file) {
     const w = bitmap.width | 0;
     const h = bitmap.height | 0;
 
-    if (w < 1 || h < 1 || w > 512 || h > 512) {
-        alert(`PNG must be between 1x1 and 512x512. Got ${w}x${h}.`);
+    if (w < 1 || h < 1 || w > 256 || h > 256) {
+        alert(`PNG must be between 1x1 and 256x256. Got ${w}x${h}.`);
         return;
     }
 
@@ -1131,7 +1150,7 @@ async function openPngToWorkingGrid(file) {
     redrawGridOverlay();
 
     // Stamp metadata for first save
-    SG4.gatMeta.createdUtc = SG4.gatMeta.createdUtc ?? SG4.utcNowIso();
+    sg4.gatMeta.createdUtc = sg4.gatMeta.createdUtc ?? sg4.utcNowIso();
 
     if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
         gridDimsLocked = false;

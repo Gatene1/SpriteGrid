@@ -30,7 +30,7 @@ function historyEndAction() {
 function historyCanUndo() { return undoStack.length > 0; }
 function historyCanRedo() { return redoStack.length > 0; }
 
-// These assume `grid` exists globally (which it does in SG4)
+// These assume `grid` exists globally (which it does in sg4)
 function historyUndo() {
     const action = undoStack.pop();
     if (!action) return false;

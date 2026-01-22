@@ -547,19 +547,7 @@ function gridUpdateMousePos(e) {
     mouseXGrid = e.clientX - rect.left - root.scrollLeft;
     mouseYGrid = e.clientY - rect.top - root.scrollTop;
 
-    const colV = Math.floor(mouseXGrid / cellSize);
-    const rowV = Math.floor(mouseYGrid / cellSize);
-
-    // If mouse is outside the visible viewport, ignore.
-    if (colV < 0 || rowV < 0 || colV >= viewWCells || rowV >= viewHCells) {
-        mouseToGrid = -1;
-        return;
-    }
-
-    const col = colV + camXCells;
-    const row = rowV + camYCells;
-
-    mouseToGrid = (row * gridW) + col;
+    mouseToGrid = (Math.floor(mouseYGrid / cellSize) * gridW) + Math.floor(mouseXGrid / cellSize);
 
 
 
@@ -772,34 +760,6 @@ function updateSpriteMovePreviewAtCellIndex(idx) {
     movePreviewOk = canPlaceRect(moveTargetX, moveTargetY, s.wCells, s.hCells);
 }
 
-function previewPointerDown(e) {
-    // Only left button
-    if (e.button !== 0) return;
-
-    previewDragging = true;
-
-    // Keep getting moves even if cursor leaves canvas
-    previewCanvas.setPointerCapture(e.pointerId);
-
-    // Update immediately on click-down
-    previewReticleDrag(e);
-
-    e.preventDefault();
-}
-
-function previewPointerMove(e) {
-    if (!previewDragging) return;
-    previewReticleDrag(e);
-    e.preventDefault();
-}
-
-function previewPointerUp(e) {
-    if (!previewDragging) return;
-    previewDragging = false;
-
-    try { previewCanvas.releasePointerCapture(e.pointerId); } catch {}
-    e.preventDefault();
-}
 
 
 

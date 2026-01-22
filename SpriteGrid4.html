@@ -64,7 +64,7 @@
                 <div class="dimRow">
                     <div class="dimGroup">
                         <label class="dimLabel" for="gridWInput">Width</label>
-                        <input id="gridWInput" type="number" min="1" max="512" step="1" value="16" />
+                        <input id="gridWInput" type="number" min="1" max="256" step="1" value="16" />
                     </div>
 
                     <button id="gridLockBtn" class="linkBtn linkOn" title="Lock aspect ratio" aria-pressed="true">
@@ -73,7 +73,7 @@
 
                     <div class="dimGroup">
                         <label class="dimLabel" for="gridHInput">Height</label>
-                        <input id="gridHInput" type="number" min="1" max="512" step="1" value="16" />
+                        <input id="gridHInput" type="number" min="1" max="256" step="1" value="16" />
                     </div>
 
                     <button id="gridApplyBtn" class="applyBtn btn btn-success btn-sm" title="Apply dimensions"
@@ -123,9 +123,9 @@
         </div>
         <div class="divInnerBottomFlexCol">
             <div class="divInnerBottomFlexColChild">
-                <canvas id="previewWindow" width="130" height="130"></canvas>
+                <canvas id="previewWindow" width="300" height="290"></canvas>
             </div>
-            <div>
+            <div style="width: 100%;">
                 <select class="form-select form-select-sm" id="previewSelect">
                     <option value="1">1X</option>
                     <option value="2" selected>2X</option>
@@ -165,9 +165,9 @@
                 <b><u>Color Format</u></b><br>
                 <fieldset id="colorFormatGroup">
                     <input type = "radio" id="colorFormatRGBA" name="colorFormat" value="0"> <label for="colorFormatRGBA">RGBA &rarr; Std</label><br>
-                    <input type = "radio" id="colorFormatBGRA" name="colorFormat" value="1" CHECKED> <label for="colorFormatBGRA">BGRA &rarr; Native</label><br>
+                    <input type = "radio" id="colorFormatBGRA" name="colorFormat" value="1"> <label for="colorFormatBGRA">BGRA</label><br>
                     <input type = "radio" id="colorFormatARGB" name="colorFormat" value="2"> <label for="colorFormatARGB">ARGB</label><br>
-                    <input type = "radio" id="colorFormatABGR" name="colorFormat" value="3"> <label for="colorFormatABGR">ABGR</label><br>
+                    <input type = "radio" id="colorFormatABGR" name="colorFormat" value="3" CHECKED> <label for="colorFormatABGR">ABGR &rarr; Native</label><br>
                 </fieldset>
             </div>
         </div>

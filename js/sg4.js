@@ -19,8 +19,8 @@ var firstDraw = true;
 var closingWindow = false;
 var prevWindowToHaveFocus = 0;
 var canvasGrid, canvasGridCTX, colorCanvas, colorCanvasCTX, colorChooseRow1, colorChooseRow1CTX, previewWindow,
-    previewWindowCTX, spriteCanvas, spriteCanvasCTX, levelCanvas, levelCanvasCTX;
-var mouseXGrid, mouseYGrid, mouseXSpriteGrid, mouseYSpriteGrid;
+    previewWindowCTX, spriteCanvas, spriteCanvasCTX, levelCanvas, levelCanvasCTX, previewCanvas, previewCanvasCTX;
+var mouseXGrid, mouseYGrid, mouseXSpriteGrid, mouseYSpriteGrid, mouseXPreviewCanvas, mouseYPreviewCanvas;
 var pixelsPerUnit = 2;
 var gridSize = 16;
 var cellSize = 24;
@@ -34,10 +34,11 @@ var trimWhitespace = document.getElementById("trimWhitespace");
 window.redrawQueued = false;
 window.BgColor = 4294967295;
 window.showBgBool = false;
-window.sg4.ColorParadigm = ColorFormat.BGRA;
+window.sg4.ColorParadigm = ColorFormat.ABGR;
 window.sg4.StateMachine = State.NORMAL;
-const NATIVE_FORMAT = ColorFormat.BGRA; // Locked spec “native”
+const NATIVE_FORMAT = ColorFormat.ABGR; // Locked spec “native”
 let colorFormatGroup = document.getElementById("colorFormatGroup");
+
 let gridW = 16;
 let gridH = 16;
 let imgData = null;
@@ -65,8 +66,8 @@ var eraseTool = false;
 
 // Vars for classes
 var savedColorSquareArray = [
-    new savedColorSquare(0, 0, 0, 0, GRID_BORDER_COLOR, 4278255360),
-    new savedColorSquare(0, 0, 0, 0, "#000000ff", 4278190335),
+    new savedColorSquare(0, 0, 0, 0, GRID_BORDER_COLOR, hex8ToUint32("#00FF00FF")),
+    new savedColorSquare(0, 0, 0, 0, "#000000ff", hex8ToUint32("#FF0000FF")),
     new savedColorSquare(0, 0, 0, 0, "#000000ff", GRID_FILL_COLOR),
     new savedColorSquare(0, 0, 0, 0, "#000000ff", GRID_FILL_COLOR),
     new savedColorSquare(0, 0, 0, 0, "#000000ff", GRID_FILL_COLOR),
@@ -102,7 +103,7 @@ var colorPicker = new iro.ColorPicker('#picker', {
 var currColor = hex8ToUint32(colorPicker.color.hex8String);
 var colorTextElement = document.getElementById("colorTextElement");
 var colorTextElementUint32 = document.getElementById("colorTextElementUint32");
-var colorStores = [4278255360, 4278190335, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR];
+var colorStores = [hex8ToUint32("#00FF00FF"), hex8ToUint32("#FF0000FF"), GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR, GRID_FILL_COLOR];
 var colorStoresSelected = 0;
 var colorStoresSquareSize = 24;
 var colorStoresBorderSize = 2;
@@ -110,7 +111,16 @@ var colorStoresSquareGap = 15.55;
 var alreadyDeclaredSavedColorClasses = false;
 var colorStoresClicked = 0;
 
+// NOTE: Don't do any UI drawing or refresh work at module-load time.
+// The canvases/contexts are initialized in window.onload. We'll sync the
+// color UI once the app is fully initialized.
+
+
 // Vars for preview window
+const PREV_CANVAS_WIDTH = 300;
+const PREV_CANVAS_HEIGHT = 290;
+let prevDrawingCenterOnCanvasStartX = 2;
+let prevDrawingCenterOnCanvasStartY = 2;
 var prevCellSize = 2;
 var previewSelect = document.getElementById("previewSelect");
 
@@ -160,7 +170,8 @@ const bumpDown  = document.getElementById("bumpDown");
 const bumpLeft  = document.getElementById("bumpLeft");
 const bumpRight = document.getElementById("bumpRight");
 
-//let dimsLinked = true;
+let gridScrollDiv = null;
+
 let gridDimsLocked = true;
 
 window.sg4 ??= {};
@@ -199,6 +210,21 @@ var prevGearHW = document.getElementById("prevGearHW");
 var prevCloseHW = document.getElementById("prevCloseHW");
 var window2Color = "Green";
 var divSide2 = document.getElementById("divSide2");
+
+const scale = Math.min(PREV_CANVAS_WIDTH / gridSize, PREV_CANVAS_HEIGHT / gridSize);
+const drawW = gridSize * scale;
+const drawH = gridSize * scale;
+let offX = (PREV_CANVAS_WIDTH - drawW) / 2;
+let offY = (PREV_CANVAS_HEIGHT - drawH) / 2;
+let previewDragging = false;
+let viewDirty = false;
+
+const WORK_CANVAS_WIDTH  = 256; // 512x512 used to be the max. 300x300 is the highest
+const WORK_CANVAS_HEIGHT = 256; // resolution that has tolerable lag.
+let camXCells = 0;
+let camYCells = 0;
+let viewWCells = Math.floor(WORK_CANVAS_WIDTH / cellSize);
+let viewHCells = Math.floor(WORK_CANVAS_HEIGHT / cellSize);
 
 // Vars for Third Window (Color Iro.js)
 var colorLmbDown = false;
@@ -399,6 +425,10 @@ window.onload = function() {
     previewWindow = document.getElementById("previewWindow");
     previewWindowCTX = previewWindow.getContext('2d');
 
+    previewCanvas = document.getElementById("previewWindow");
+    previewCanvasCTX = previewCanvas.getContext("2d");
+    previewCanvasCTX.imageSmoothingEnabled = false;
+
     spriteCanvas = document.getElementById("spriteCanvas");
     spriteCanvasCTX = spriteCanvas.getContext('2d');
     spriteWindowWidth = spriteCanvas.width;
@@ -411,6 +441,9 @@ window.onload = function() {
     levelCanvas.width = levelCanvasWidth;
     levelCanvas.height = levelCanvasHeight;
 
+    gridScrollDiv = document.querySelector(".divInnerBottomCanvasGrid");
+
+
     // --- SpriteSheet geometry (make maxCells real) ---
     spriteCellSize = BASE_CELL_PX * 2; //4; // 16px base * 4 = 64px on-screen (10 cols on a 700px canvas)
     // sheetCols = Math.max(1, Math.floor(spriteCanvas.width / spriteCellSize)); // e.g. 10
@@ -418,6 +451,13 @@ window.onload = function() {
 
     allocSheet(sheetCols, sheetRows);
     rebuildSheetOccFromSprites();
+
+    // Required only once at startup.
+    updateViewCells();
+    syncCanvasToGrid();
+    redrawGridOverlay();
+    requestGridFullRedraw();
+
 
     // ─────────────────────────────────────────────
     // This replaces the setInterval() function call.
@@ -454,6 +494,20 @@ window.onload = function() {
 
 
     createAlphaPattern();
+
+    // ─────────────────────────────────────────────
+    // Color paradigm boot sync (Option B: ABGR is true native/internal)
+    // ─────────────────────────────────────────────
+    // Make JS follow whichever radio is checked (HTML is source of truth).
+    // This prevents "native" drift if the markup is edited.
+    const checkedParadigm = document.querySelector('input[name="colorFormat"]:checked');
+    if (checkedParadigm) sg4.ColorParadigm = parseInt(checkedParadigm.value, 10);
+
+    // Initial UI sync for color fields and previews (safe now: contexts exist)
+    colorTextElement.value = nativeToHex8(currColor); // ALWAYS #RRGGBBAA
+    colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
+    drawPreviewSquare(100);
+    refreshGridOutput();
 
     // Listeners for whole app.
     divSide1.addEventListener('mousedown', function() { openWindow(0);
@@ -535,11 +589,6 @@ window.onload = function() {
                 return;
             }
         }
-    });
-
-    colorFormatGroup.addEventListener('change', (e) => {
-        if (e.target.name !== "colorFormat") return;
-        sg4.ColorParadigm = parseInt(e.target.value);
     });
 
 
@@ -633,10 +682,12 @@ window.onload = function() {
     });
 
     gridWInput.addEventListener("input", () => {
+        gridWInput.value = Math.min(parseInt(gridWInput.value), 256);
         if (gridDimsLocked) gridHInput.value = gridWInput.value;
     });
     gridWInput.addEventListener("keydown", handleGridDimEnter, true);
     gridHInput.addEventListener("input", () => {
+        gridHInput.value = Math.min(parseInt(gridHInput.value), 256);
         if (gridDimsLocked) gridWInput.value = gridHInput.value;
     });
     gridHInput.addEventListener("keydown", handleGridDimEnter, true);
@@ -647,6 +698,7 @@ window.onload = function() {
     bumpDown?.addEventListener("click",  () => bumpGrid(0,  1), true);
     bumpLeft?.addEventListener("click",  () => bumpGrid(-1, 0), true);
     bumpRight?.addEventListener("click", () => bumpGrid( 1, 0), true);
+    gridScrollDiv.addEventListener("scroll", syncReticleToWorkingGrid, false);
 
     const offscreenCanvas = document.createElement("canvas");
     const offscreenCtx = offscreenCanvas.getContext("2d");
@@ -658,6 +710,17 @@ window.onload = function() {
     prevGearHW.addEventListener('mousedown', prevGearClick, true);
     prevCloseHW.addEventListener('mousedown', function() { closeWindow(1); }, true);
     previewSelect.addEventListener('change', previewScale, true);
+
+    previewCanvas.addEventListener("pointerleave", () => {
+        previewDragging = false;
+    });
+
+    previewCanvas.addEventListener("pointerdown", previewPointerDown);
+    previewCanvas.addEventListener("pointermove", previewPointerMove);
+    previewCanvas.addEventListener("pointerup", previewPointerUp);
+    previewCanvas.addEventListener("pointercancel", previewPointerUp);
+
+
 
     // Listeners for Third Window (Color Iro.js)
     colorLittleWindow.addEventListener('mousedown', colorLittleWindowClick, false);
@@ -674,14 +737,28 @@ window.onload = function() {
         currColor = packNative(bytes.r, bytes.g, bytes.b, bytes.aByte);
         colorPicker.color.set(bytesToIro(bytes));
 
-        colorTextElementUint32.value =
-            nativeToFormatUint32(currColor, sg4.ColorParadigm);
+        colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
+
+        drawPreviewSquare(100);   // ADD
+        requestRerender();        // ADD (optional but nice)
     });
+
     colorTextElementUint32.addEventListener('change', colorText, true);
     loadPalletteButton.addEventListener('click', loadPalletteFile, true);
     savePalletteButton.addEventListener('click', savePalletteFile, true);
     copyColorCode.addEventListener('click', () => copyColorToClipboard(1), true);
     copyColorCodeUint32.addEventListener('click', () => copyColorToClipboard(2), true);
+    colorFormatGroup.addEventListener('change', (e) => {
+        if (e.target.name !== "colorFormat") return;
+        sg4.ColorParadigm = parseInt(e.target.value, 10);
+
+        // Re-lens the uint32 display for the current color (currColor stays native)
+        colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
+
+        refreshGridOutput();
+        drawPreviewSquare(100);
+        requestRerender();
+    });
 
     // Listeners for Fourth Window (Output)
     outLittleWindow.addEventListener('mousedown', outLittleWindowClick, false);
@@ -701,8 +778,11 @@ window.onload = function() {
         if (!bytes) { alert("Invalid hex"); return; }
 
         const u32 = bytesToFormatUint32(bytes, sg4.ColorParadigm);
-        alert("0x" + u32.toString(16).padStart(8, "0").toUpperCase());
+
+        // DECIMAL output (what you want)
+        alert(String(u32 >>> 0));
     }, true);
+
 
     uintToHexButton.addEventListener("click", function () {
         const u32 = parseU32Text(uintToHexText.value);
@@ -761,3 +841,4 @@ window.onload = function() {
     showLevelGridCheckbox.addEventListener('click', turnLevelGridOnOff);
     saveLevelPNGButton.addEventListener('click', saveLevelGridAsPNG);
 }
+

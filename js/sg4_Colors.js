@@ -4,20 +4,14 @@ function activateColor() {
     colorStoresSelected = colorStoresClicked;
     savedColorSquareArray[colorStoresClicked].borderColor = GRID_BORDER_COLOR;
     currColor = savedColorSquareArray[colorStoresClicked].colorHeld;
-    //alert (uIntToRgbaString(currColor));
+
     drawPreviewSquare(100);
 
     const bytes = unpackNative(currColor);
     colorPicker.color.set(bytesToIro(bytes));
 
-    colorTextElement.value = bytesToHex8(bytes);
-    colorTextElementUint32.value =
-        "0x" + nativeToFormatUint32(currColor, sg4.ColorParadigm)
-            .toString(16)
-            .padStart(8, "0")
-            .toUpperCase();
-
-
+    colorTextElement.value = nativeToHex8(currColor).toUpperCase();
+    colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
 }
 
 function findWhereClicked() {
@@ -34,85 +28,6 @@ function copyColorToClipboard(num) {
         .catch( err => {
             alert('Failure to Copy');
         });
-}
-
-function rgbToUint(rgb) {
-    let a = rgb.a ?? 1;
-    if (a > 1) a /= 255;
-
-    return packRGBA(
-        rgb.r & 255,
-        rgb.g & 255,
-        rgb.b & 255,
-        Math.round(a * 255) & 255
-    );
-}
-
-
-function abgrToUint(rgbObject) {
-    return ((rgbObject.r) * 255 << 24) | (rgbObject.g << 16) | (rgbObject.b<< 8) | rgbObject.a;
-}
-
-function uIntToRgb(uInt) {
-    return {
-        a: (uInt >> 24) & 0xFF,
-        b: (uInt >> 16) & 0xFF,
-        g: (uInt >> 8) & 0xFF,
-        r: uInt & 0xFF
-    };
-}
-
-function uIntToRgba(uint) {
-    switch (sg4.ColorParadigm) {
-        case 0:
-            return {
-                a: uint & 0xFF,
-                b: (uint >> 8) & 0xFF,
-                g: (uint >> 16) & 0xFF,
-                r: (uint >> 24) & 0xFF
-            }
-            break;
-        case 1:
-            return {
-                a: uint & 0xFF,
-                r: (uint >> 8) & 0xFF,
-                g: (uint >> 16) & 0xFF,
-                b: (uint >> 24) & 0xFF
-            };
-            break;
-        case 2:
-            return {
-                b: uint & 0xFF,
-                g: (uint >> 8) & 0xFF,
-                r: (uint >> 16) & 0xFF,
-                a: (uint >> 24) & 0xFF
-            };
-            break;
-        case 3:
-            return {
-                r: uint & 0xFF,
-                g: (uint >> 8) & 0xFF,
-                b: (uint >> 16) & 0xFF,
-                a: (uint >> 24) & 0xFF
-            };
-            break;
-    }
-
-    /*return {
-        g: (uInt >> 8) & 0xFF,
-        b: (uInt >> 16) & 0xFF,
-        a: ((uInt >> 24) & 0xFF) / 255,
-        r: uInt & 0xFF
-    };*/
-}
-
-function uIntToRgbaDivide(uInt) {
-    return {
-        g: (uInt >> 8) & 0xFF,
-        b: (uInt >> 16) & 0xFF,
-        a: ((uInt >> 24) / 255 & 0xFF),
-        r: uInt & 0xFF
-    };
 }
 
 function hexToBytes(hexString) {
@@ -137,22 +52,6 @@ function hex8ToRgbaBytes(hex) {
     return [r, g, b, a];
 }
 
-
-function uIntToRgbString(uInt) {
-    const stringVersion = uIntToRgb(uInt);
-    return "rgb(" + stringVersion.r + ", " + stringVersion.g + ", " + stringVersion.b + ")";
-}
-
-function uIntToRgbaString(uInt) {
-    const stringVersion = uIntToRgba(uInt);
-    return "rgba(" + stringVersion.r + ", " + stringVersion.g + ", " + stringVersion.b + ", " + stringVersion.a + ")";
-}
-
-function uIntToRgbaStringDivide(uInt) {
-    const stringVersion = uIntToRgbaDivide(uInt);
-    return "rgba(" + stringVersion.r + ", " + stringVersion.g + ", " + stringVersion.b + ", " + stringVersion.a + ")";
-}
-
 function hex8ToUint32(hex) {
     if (hex.startsWith("#")) hex = hex.slice(1);
     const r = parseInt(hex.slice(0, 2), 16);
@@ -162,72 +61,6 @@ function hex8ToUint32(hex) {
     return ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
 }
 
-function uint32ToHex8(uint) {
-    let r, g, b, a;
-    switch (sg4.ColorParadigm) {
-        case 0:
-            a = uint & 0xFF;
-            b = (uint >> 8) & 0xFF;
-            g = (uint >> 16) & 0xFF;
-            r = (uint >> 24) & 0xFF;
-            // r = uint & 0xFF;
-            // g = (uint >> 8) & 0xFF;
-            // b = (uint >> 16) & 0xFF;
-            // a = (uint >> 24) & 0xFF;
-            return (
-                "#" +
-                r.toString(16).padStart(2, "0") +
-                g.toString(16).padStart(2, "0") +
-                b.toString(16).padStart(2, "0") +
-                a.toString(16).padStart(2, "0")
-            );
-            break;
-        case 1:
-            a = uint & 0xFF;
-            r = (uint >> 8) & 0xFF;
-            g = (uint >> 16) & 0xFF;
-            b = (uint >> 24) & 0xFF;
-            return (
-                "#" +
-                b.toString(16).padStart(2, "0") +
-                g.toString(16).padStart(2, "0") +
-                r.toString(16).padStart(2, "0") +
-                a.toString(16).padStart(2, "0")
-            );
-            break;
-        case 2:
-            b = uint & 0xFF;
-            g = (uint >> 8) & 0xFF;
-            r = (uint >> 16) & 0xFF;
-            a = (uint >> 24) & 0xFF;
-            return (
-                "#" +
-                a.toString(16).padStart(2, "0") +
-                r.toString(16).padStart(2, "0") +
-                g.toString(16).padStart(2, "0") +
-                b.toString(16).padStart(2, "0")
-            );
-            break;
-        case 3:
-            r = uint & 0xFF;
-            g = (uint >> 8) & 0xFF;
-            b = (uint >> 16) & 0xFF;
-            a = (uint >> 24) & 0xFF;
-            return (
-                "#" +
-                a.toString(16).padStart(2, "0") +
-                b.toString(16).padStart(2, "0") +
-                g.toString(16).padStart(2, "0") +
-                r.toString(16).padStart(2, "0")
-            );
-            break;
-    }
-
-
-
-
-}
-
 function createAlphaPattern() {
     const tileSize = 8;
     const patternCanvas = document.createElement("canvas");
@@ -235,7 +68,6 @@ function createAlphaPattern() {
 
     const pctx = patternCanvas.getContext("2d");
 
-    // Colors
     const light = "#f2f2f2";
     const dark  = "#e0e0e0";
 
@@ -249,57 +81,6 @@ function createAlphaPattern() {
 
     // Store globally
     alphaPattern = canvasGridCTX.createPattern(patternCanvas, "repeat");
-}
-
-function hex8ToAABBGGRR(hex) {
-    // "#RRGGBBAA" → Uint32 0xAABBGGRR for ImageData Uint32 view
-    hex = hex.startsWith("#") ? hex.slice(1) : hex;
-    if (hex.length === 6) hex += "FF";
-    const rr = parseInt(hex.slice(0,2),16) & 255;
-    const gg = parseInt(hex.slice(2,4),16) & 255;
-    const bb = parseInt(hex.slice(4,6),16) & 255;
-    const aa = parseInt(hex.slice(6,8),16) & 255;
-    return (aa<<24) | (bb<<16) | (gg<<8) | rr;
-}
-
-function packRGBA(r, g, b, a, format = sg4.ColorParadigm) {
-    switch (format) {
-        case ColorFormat.RGBA:
-            return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
-
-        case ColorFormat.BGRA:
-            return ((b << 24) | (g << 16) | (r << 8) | a) >>> 0;
-
-        case ColorFormat.ARGB:
-            return ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
-
-        case ColorFormat.ABGR:
-            return ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
-    }
-}
-
-function rgbaToHex8(r, g, b, a) {
-    let r2 = parseInt(r).toString(16).padStart(2, 0);
-    let g2 = parseInt(g).toString(16).padStart(2, 0);
-    let b2 = parseInt(b).toString(16).padStart(2, 0);
-    let a2 = Math.floor((parseInt(a) * 255)).toString(16).padStart(2, 0).toUpperCase();
-
-    return r2 + g2 + b2 + a2;
-}
-
-function unpackRGBA(u32, format) {
-    u32 >>>= 0;
-    let b3 = (u32 >>> 24) & 255;
-    let b2 = (u32 >>> 16) & 255;
-    let b1 = (u32 >>> 8) & 255;
-    let b0 = u32 & 255;
-
-    switch (format) {
-        case ColorFormat.RGBA: return { r: b3, g: b2, b: b1, aByte: b0 };
-        case ColorFormat.BGRA: return { b: b3, g: b2, r: b1, aByte: b0 };
-        case ColorFormat.ARGB: return { aByte: b3, r: b2, g: b1, b: b0 };
-        case ColorFormat.ABGR: return { aByte: b3, b: b2, g: b1, r: b0 };
-    }
 }
 
 // ─────────────────────────────────────────────
@@ -421,9 +202,34 @@ function nativeToHex8(u32) {
 }
 
 function parseU32Text(s) {
-    if (typeof s != "string") return null;
+    if (typeof s !== "string") return null;
     let t = s.trim();
-    if (t.startsWith("0x") || t.startsWith("0X")) t = t.slice(2);
-    if (!/^[0-9a-fA-F]{1,8}$/.test(t)) return null;
-    return (parseInt(t, 16) >>> 0);
+
+    // Allow hex with 0x (optional convenience)
+    if (t.startsWith("0x") || t.startsWith("0X")) {
+        t = t.slice(2);
+        if (!/^[0-9a-fA-F]{1,8}$/.test(t)) return null;
+        return (parseInt(t, 16) >>> 0);
+    }
+
+    // Primary: DECIMAL (this matches what your picker copies)
+    if (!/^[0-9]{1,10}$/.test(t)) return null;
+
+    const n = Number(t);
+    if (!Number.isFinite(n)) return null;
+    if (n < 0 || n > 4294967295) return null;
+
+    return (n >>> 0);
+}
+
+function applyCurrColor(nativeU32) {
+    currColor = (nativeU32 >>> 0);
+
+    const bytes = unpackNative(currColor);
+    colorPicker.color.set(bytesToIro(bytes));
+
+    colorTextElement.value = bytesToHex8(bytes);
+    colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
+
+    drawPreviewSquare(100);
 }

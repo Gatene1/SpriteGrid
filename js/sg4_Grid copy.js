@@ -109,8 +109,6 @@ function changeCellColor() {
 
     const gx = Math.floor(mouseXGrid / cellSize);
     const gy = Math.floor(mouseYGrid / cellSize);
-
-
     if (gx < 0 || gy < 0 || gx >= gridW || gy >= gridH) return;
     if (rmbDown) return;
 
@@ -132,9 +130,8 @@ function changeCellColor() {
 function RMB() {
     rmbDown = true;
 
-    const gx = camXCells + Math.floor(mouseXGrid / cellSize);
-    const gy = camYCells + Math.floor(mouseYGrid / cellSize);
-
+    const gx = Math.floor(mouseXGrid / cellSize);
+    const gy = Math.floor(mouseYGrid / cellSize);
     if (gx < 0 || gy < 0 || gx >= gridW || gy >= gridH) return;
 
     const idx = gridIndex(gx, gy);
@@ -271,7 +268,7 @@ function applyNewGridDimensions() {
     requestGridOutputRefresh();
     //markSheetStaticDirty();
     // redrawGridOverlay();
-    syncReticleToWorkingGrid();
+    requestRerender();
 }
 
 function syncCanvasToGrid() {
@@ -283,13 +280,12 @@ function syncCanvasToGrid() {
     canvasGrid.style.width  = wPx + "px";
     canvasGrid.style.height = hPx + "px";
 
+    // overlay canvas matches exactly
     canvasGridLines.width  = wPx;
     canvasGridLines.height = hPx;
     canvasGridLines.style.width  = wPx + "px";
     canvasGridLines.style.height = hPx + "px";
 }
-
-
 
 
 function ensureGridBackbuffer(w, h) {
@@ -351,28 +347,26 @@ function presentOffscreenToVisible() {
     // clear
     canvasGridCTX.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
 
-    // background color layer
+    // 2) background color layer
     if (showBgBool) {
         canvasGridCTX.fillStyle = nativeToHex8(bgColorChoose);
         canvasGridCTX.fillRect(0, 0, canvasGrid.width, canvasGrid.height);
     }
 
-    // alpha checkerboard behind pixels
+    // 3) alpha checkerboard behind pixels
     if (showAlpha) {
         canvasGridCTX.fillStyle = alphaPattern;
         canvasGridCTX.fillRect(0, 0, canvasGrid.width, canvasGrid.height);
     }
 
-    // scaled pixels (full grid)
+    // 4) scaled pixels
     canvasGridCTX.imageSmoothingEnabled = false;
     canvasGridCTX.drawImage(
         gridOffCanvas,
         0, 0, gridW, gridH,
-        0, 0, gridW * cellSize, gridH * cellSize
+        2, 2, gridW * cellSize, gridH * cellSize
     );
 }
-
-
 
 function clearOffscreen() {
     if (gridOffU32) gridOffU32.fill(0);
@@ -401,10 +395,9 @@ function changeCellSizeByWheel(e) {
                cSizeRangeText.value = cellSize.toString() + " Pixels";
                cellSizeRange.value = cellSize;
                forceDrawWorkingGridOnce = true;
-               syncReticleToWorkingGrid();
-               syncCanvasToGrid();
-               redrawGridOverlay();
+               updateViewCells();
                requestGridFullRedraw();
+               requestRerender();
            }
        } else if (e.deltaY > 0) { // If scrolled down with the mouse wheel.
            if (cellSize > 2) {
@@ -412,17 +405,10 @@ function changeCellSizeByWheel(e) {
                cSizeRangeText.value = cellSize.toString() + " Pixels";
                cellSizeRange.value = cellSize;
                forceDrawWorkingGridOnce = true;
-               syncReticleToWorkingGrid();
-               syncCanvasToGrid();
-               redrawGridOverlay();
-
+               updateViewCells();
                requestGridFullRedraw();
+               requestRerender();
            }
        }
     }
-}
-
-function clampCameraToGrid() {
-    sg4.camXCells = Math.max(0, Math.min(sg4.camXCells, sg4.gridW - sg4.viewWCells));
-    sg4.camYCells = Math.max(0, Math.min(sg4.camYCells, sg4.gridH - sg4.viewHCells));
 }

@@ -10,7 +10,9 @@ function saveToStore() {
 function previewScale() {
     prevCellSize = previewSelect.value;
     firstDraw = true;
-    requestRerender();
+
+    syncReticleToWorkingGrid();
+    drawPreviewUpdate();
 }
 
 function colorText(e) {
@@ -218,7 +220,7 @@ function trimTheWhitespace() {
     scheduleGridOutputRefresh();
     //drawGrid?.();
     //markSheetStaticDirty();
-    requestRerender();
+    syncReticleToWorkingGrid();
 
     if (gridLockBtn.ariaPressed === "true" && (gridWInput.value !== gridHInput.value)) {
         gridDimsLocked = false;
@@ -315,3 +317,4 @@ function bumpGrid(dx, dy) {
     requestRerender();
 
 }
+

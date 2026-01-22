@@ -186,20 +186,10 @@ function drawColorSquares() {
 function drawPreviewUpdate() {
     let i, j;
     let localCurrCell, currCellColor;
+    let prevGridSize = gridW * gridH;
     const scale = previewSelect.value;
-    const dw = Math.round(gridW * scale);
-    const dh = Math.round(gridH * scale);
-    const maxScale = Math.min(256 / gridW, 256 / gridH);
-
-    if (dw > 256 || dh > 256) {
-        drawPreviewOverlayMessage([
-            "Preview too large",
-            `Preview is ${dw}×${dh} (max 256×256)`,
-            "Lower magnification",
-            `Try scale ≤ ${Math.floor(maxScale)}`
-        ]);
-        return; // stop drawing reticle, optional
-    }
+    const drawingW = gridW * scale;
+    const magnifyValue = (PREV_CANVAS_WIDTH - drawingW) / 2;
 
     previewWindowCTX.clearRect(0, 0, 300, 300);
     //alert ("GridSize = " + gridSize);
@@ -223,12 +213,6 @@ function drawPreviewUpdate() {
     }
     drawPreviewNavigator();
 }
-
-function getPreviewReticleNudge(scale) {
-    // Half a cell in preview pixel space, so the reticle appropriately shows up.
-    return { x: scale / 2, y: scale / 2 };
-}
-
 
 function getPreviewLayout() {
     const scale = Number(previewSelect.value); // pixels per cell in preview
@@ -258,9 +242,6 @@ function previewReticleDrag(e) {
     const sx = (mx - offX) / scale;
     const sy = (my - offY) / scale;
 
-    // ignore if dragging outside the previewed grid bounds
-    if (sx < 0 || sy < 0 || sx >= gridW || sy >= gridH) return;
-
     // treat mouse as reticle CENTER
     let nextCamX = Math.floor(sx - viewWCells / 2);
     let nextCamY = Math.floor(sy - viewHCells / 2);
@@ -272,12 +253,11 @@ function previewReticleDrag(e) {
     nextCamX = Math.min(maxCamX, Math.max(0, nextCamX));
     nextCamY = Math.min(maxCamY, Math.max(0, nextCamY));
 
-    const div = gridScrollDiv || document.querySelector(".divInnerBottomCanvasGrid");
-    if (div) {
-        div.scrollLeft = nextCamX * cellSize;
-        div.scrollTop  = nextCamY * cellSize;
-    }
-    syncReticleToWorkingGrid();
+    camXCells = nextCamX;
+    camYCells = nextCamY;
+
+    viewDirty = true;
+    requestRerender();
 }
 
 
@@ -285,25 +265,12 @@ function previewReticleDrag(e) {
 function drawPreviewNavigator() {
     updateViewCells();
 
-
-
     const { scale, offX, offY } = getPreviewLayout();
-    const { x: nudgeX, y: nudgeY } = getPreviewReticleNudge(scale);
-    //const { nudgeX, nudgeY } = getPreviewReticleNudge(); // computed from DOM/CSS padding or draw origin
 
-    const retX = offX + camXCells * scale - nudgeX;
-    const retY = offY + camYCells * scale - nudgeY;
-
+    const retX = offX + camXCells * scale;
+    const retY = offY + camYCells * scale;
     const retW = viewWCells * scale;
     const retH = viewHCells * scale;
-
-    if (!Number.isFinite(scale) || !Number.isFinite(offX) || !Number.isFinite(offY) ||
-        !Number.isFinite(camXCells) || !Number.isFinite(camYCells) ||
-        !Number.isFinite(cellSize)) {
-        console.warn("RETICLE BAD VALUES", { scale, offX, offY, camXCells, camYCells, cellSize });
-        return;
-    }
-
 
     // Don’t draw if preview is not usable yet
     if (!isFinite(retX + retY + retW + retH)) return;
@@ -455,32 +422,33 @@ function redrawGridOverlay() {
 
     if (!showTheGrid) return;
 
+    // light overlay line style
     canvasGridLinesCTX.strokeStyle = GRID_BORDER_COLOR;
     canvasGridLinesCTX.lineWidth = 1;
-
-    updateViewCells();
 
     const wPx = gridW * cellSize;
     const hPx = gridH * cellSize;
 
-// vertical lines
+    // vertical lines
     for (let x = 0; x <= gridW; x++) {
-        const px = x * cellSize;
+        const px = (x * cellSize) + 2;
         canvasGridLinesCTX.beginPath();
-        canvasGridLinesCTX.moveTo(px + 0.5, 0);
-        canvasGridLinesCTX.lineTo(px + 0.5, hPx);
+        canvasGridLinesCTX.moveTo(px, 2);
+        canvasGridLinesCTX.lineTo(px, hPx + 2);
         canvasGridLinesCTX.stroke();
     }
 
-// horizontal lines
+    // horizontal lines
     for (let y = 0; y <= gridH; y++) {
-        const py = y * cellSize;
+        const py = (y * cellSize) + 2;
         canvasGridLinesCTX.beginPath();
-        canvasGridLinesCTX.moveTo(0, py + 0.5);
-        canvasGridLinesCTX.lineTo(wPx, py + 0.5);
+        canvasGridLinesCTX.moveTo(2, py);
+        canvasGridLinesCTX.lineTo(wPx + 2, py);
         canvasGridLinesCTX.stroke();
     }
 }
+
+
 function turnLevelGridOnOff() {
     showTheLevelGrid = showLevelGridCheckbox.checked;
 }
@@ -962,69 +930,11 @@ function stopEraseTool() {
     mouseSprite = null;
 }
 
-function getScrollPaddingPx(div) {
-    const cs = getComputedStyle(div);
-    const padL = parseFloat(cs.paddingLeft) || 0;
-    const padT = parseFloat(cs.paddingTop)  || 0;
-    return { padL, padT };
-}
-
 function updateViewCells() {
-    // Visible viewport is defined by the scroll container, not constants.
-    const div = gridScrollDiv || document.querySelector(".divInnerBottomCanvasGrid");
+    viewWCells = Math.max(1, Math.floor(WORK_CANVAS_WIDTH / cellSize));
+    viewHCells = Math.max(1, Math.floor(WORK_CANVAS_HEIGHT / cellSize));
 
-    const wPx = div ? div.clientWidth  : WORK_CANVAS_WIDTH;
-    const hPx = div ? div.clientHeight : WORK_CANVAS_HEIGHT;
-
-    const { padL, padT } = getScrollPaddingPx(div);
-
-    viewWCells = Math.max(1, Math.floor(wPx / cellSize));
-    viewHCells = Math.max(1, Math.floor(hPx / cellSize));
-
-    // Camera = top-left visible cell in the Working Grid
-    if (div) {
-        // include fractional cell offset so the reticle can align perfectly
-        camXCells = div.scrollLeft / cellSize;
-        camYCells = div.scrollTop  / cellSize;
-    }
-
-    // Clamp so reticle stays inside grid bounds
-    const maxCamX = Math.max(0, gridW - viewWCells);
-    const maxCamY = Math.max(0, gridH - viewHCells);
-    camXCells = Math.max(0, (div.scrollLeft - padL) / cellSize);
-    camYCells = Math.max(0, (div.scrollTop  - padT) / cellSize);
-
+    camXCells = Math.min(camXCells, Math.max(0, gridW - viewWCells));
+    camYCells = Math.min(camYCells, Math.max(0, gridH - viewHCells));
 }
 
-function syncReticleToWorkingGrid() {
-    // Single source of truth: the Working Grid scroll container.
-    updateViewCells();      // reads scrollLeft/Top into camXCells/camYCells + viewW/H
-    viewDirty = true;       // preview needs redraw
-    requestRerender();      // triggers preview draw loop
-}
-
-function drawPreviewOverlayMessage(lines) {
-    const ctx = previewCanvasCTX;
-    const w = previewCanvas.width;
-    const h = previewCanvas.height;
-
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(255,255,255,0.95)";
-    ctx.font = "bold 16px system-ui";
-
-    const lineHeight = 18;
-    const totalH = (lines.length - 1) * lineHeight;
-    const startY = h / 2 - totalH / 2;
-
-    for (let i = 0; i < lines.length; i++) {
-        ctx.fillText(lines[i], w / 2, startY + i * lineHeight);
-        if (i === 0) ctx.font = "13px system-ui";
-    }
-
-    ctx.restore();
-}

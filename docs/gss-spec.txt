@@ -48,9 +48,9 @@ Required fields:
    - cols       (number)  Sheet width in logical cells (cell = 16x16 sprite pixels)
    - rows       (number)  Sheet height in logical cells
    - cellPx     (number)  Logical cell size in sprite pixels. Must be 16.
-   - encoding   (string)  Must be "BGRA32" (SpriteGrid v4 native)
-   - packing    (string)  Must be "0xBBGGRRAA" (SpriteGrid v4 native)
-   - colorParadigm (string) Must be "BGRA" for v4 defaults (future: user-selectable)
+   - encoding   (string)  Must be "ABGR32" (SpriteGrid v4 native)
+   - packing    (string)  Must be "0xAABBGGRR" (SpriteGrid v4 native)
+   - colorParadigm (string) Must be "ABGR" for v4 defaults (future: user-selectable)
    Optional keys (recommended):
    - name       (string)  Display name (no filesystem assumptions)
    - app        (string)  "SpriteGrid"
@@ -87,7 +87,7 @@ Where:
 - <hPx> is sprite height in pixels
 - <values> is a comma-separated list of unsigned 32-bit integers (base-10),
   length MUST equal wPx*hPx.
-- Pixel packing is BGRA32 in 0xBBGGRRAA (decimal representation) by default.
+- Pixel packing is ABGR32 in 0xBBGGRRAA (decimal representation) by default.
   Readers MAY support other paradigms in the future using sheet.colorParadigm.
 - 0 means fully transparent (0x00000000).
 
@@ -160,7 +160,7 @@ A reader should reject the file if:
 Example
 -------
 SG4GSS|
-{"format":"GSS","version":4,"meta":{"createdUtc":"2026-01-07T00:00:00Z","updatedUtc":"2026-01-07T00:00:00Z"},"sheet":{"cols":10,"rows":6,"cellPx":16,"encoding":"BGRA32","packing":"0xBBGGRRAA","colorParadigm":"BGRA","uiZoom":2,"name":"Example Sheet"}}|
+{"format":"GSS","version":4,"meta":{"createdUtc":"2026-01-07T00:00:00Z","updatedUtc":"2026-01-07T00:00:00Z"},"sheet":{"cols":10,"rows":6,"cellPx":16,"encoding":"ABGR32","packing":"0xBBGGRRAA","colorParadigm":"BGRA","uiZoom":2,"name":"Example Sheet"}}|
 SPRITES:1|
 P:0:32:16:0,0,0,0,...|
 PLACEMENTS:1|
