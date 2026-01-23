@@ -119,10 +119,14 @@ var colorStoresClicked = 0;
 // Vars for preview window
 const PREV_CANVAS_WIDTH = 300;
 const PREV_CANVAS_HEIGHT = 290;
+const MAX_PREV_IMAGE_WIDTH = 256;
+const MAX_PREV_IMAGE_HEIGHT = 256;
 let prevDrawingCenterOnCanvasStartX = 2;
 let prevDrawingCenterOnCanvasStartY = 2;
 var prevCellSize = 2;
 var previewSelect = document.getElementById("previewSelect");
+var showReticle = true;
+var showReticleCheckbox = document.getElementById("showReticleCheckbox");
 
 // Vars for every window
 const docState = {
@@ -719,6 +723,7 @@ window.onload = function() {
     previewCanvas.addEventListener("pointermove", previewPointerMove);
     previewCanvas.addEventListener("pointerup", previewPointerUp);
     previewCanvas.addEventListener("pointercancel", previewPointerUp);
+    showReticleCheckbox.addEventListener('change', drawReticleOrNot);
 
 
 

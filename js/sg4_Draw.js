@@ -27,6 +27,11 @@ function drawAll() {
 
     }
 
+    // NEW: Preview window draws independently
+    if (isWindowActive(1, true)) {
+        drawPreviewUpdate();
+    }
+
     if (isWindowActive(2, true)){
         drawColorSquares();
         drawPreviewSquare(100);
@@ -186,12 +191,15 @@ function drawColorSquares() {
 function drawPreviewUpdate() {
     let i, j;
     let localCurrCell, currCellColor;
-    const scale = previewSelect.value;
+    const layout = getPreviewLayout();
+    const { scale, drawW, drawH, offX, offY } = layout;
     const dw = Math.round(gridW * scale);
     const dh = Math.round(gridH * scale);
     const maxScale = Math.min(256 / gridW, 256 / gridH);
 
-    if (dw > 256 || dh > 256) {
+
+
+    if (dw > MAX_PREV_IMAGE_WIDTH || dh > MAX_PREV_IMAGE_HEIGHT) {
         drawPreviewOverlayMessage([
             "Preview too large",
             `Preview is ${dw}×${dh} (max 256×256)`,
@@ -221,7 +229,7 @@ function drawPreviewUpdate() {
                 nativeToHex8(currCellColor), 3);
         }
     }
-    drawPreviewNavigator();
+    drawPreviewNavigator(layout);
 }
 
 function getPreviewReticleNudge(scale) {
@@ -282,12 +290,13 @@ function previewReticleDrag(e) {
 
 
 
-function drawPreviewNavigator() {
+function drawPreviewNavigator(layout) {
+    if (!showReticle) return;
     updateViewCells();
+    const { scale, offX, offY } = layout;
 
 
-
-    const { scale, offX, offY } = getPreviewLayout();
+    //const { scale, offX, offY } = getPreviewLayout();
     const { x: nudgeX, y: nudgeY } = getPreviewReticleNudge(scale);
     //const { nudgeX, nudgeY } = getPreviewReticleNudge(); // computed from DOM/CSS padding or draw origin
 
@@ -1027,4 +1036,9 @@ function drawPreviewOverlayMessage(lines) {
     }
 
     ctx.restore();
+}
+
+function drawReticleOrNot() {
+    showReticle = showReticleCheckbox.checked;
+    drawPreviewUpdate();
 }
