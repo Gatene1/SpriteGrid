@@ -551,3 +551,11 @@ Visual Polish
 
 # 1/18/2026
 - Continued building the logic behind changing the color format.
+
+# 1/19, 1/20, 1/21, 1/22/2026
+- Finished the logic for the preview window. Specifically the reticle that was giving me so much trouble.
+- Added a checkbox that would show or hide the reticle.
+
+# 1/23/2026
+- Moved the color converters to the bottom of the Options Menu winow.
+- Made a Booska picture to use as the mascot for the window.

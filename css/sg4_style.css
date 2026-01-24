@@ -265,17 +265,26 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
     justify-content: flex-start;
 }
 
+.optionsMainDiv { display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 1rem; width: 100%; height: 100%;
+    background-color: #ffffff; }
+
 .divInnerBottomFlexColChildFile {
+    display: grid;
+    grid-template-columns: 1fr .5fr;
+    gap: .5rem;
     background-color: #ffffff;
     width: 100%;
-    height: 100%;
+    height: fit-content;
     color: #000000;
-    padding: 3px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    padding: 5px 3px 3px 3px;
 }
+
+#hexToUintText { padding: 5px; margin-bottom: 10px; }
+#hexToUintButton { padding: 0; margin: 0; }
+
+#uintToHexText { padding: 5px; margin-bottom: 10px; }
+#uintToHexButton { padding: 0; margin: 0; }
+
 
 .divInnerBottomFlexColChildLevel {
     width: 100%;
