@@ -195,13 +195,21 @@ function addToSpriteGrid(whichTool) {
 function addToLevelGrid(whichTool) {
     switch (whichTool) {
         case 1:
-            if (pasteLevelSprite) {
-                //levelGrid[levelCellOn] = levelMouseSprite;
-                levelGrid[levelCellOn] = spriteChosen;
-            }
+            if (!pasteLevelSprite) return;
+            if (levelCellOn == null || levelCellOn < 0) return;
+
+            // prefer the sprite you’re actually holding for paintbrush behavior
+            const id = (typeof levelMouseSprite !== "undefined" && levelMouseSprite != null)
+                ? levelMouseSprite
+                : spriteChosen;
+
+            if (id == null || id < 0) return;
+
+            levelSetCell(levelCellOn, id);
             break;
     }
 }
+
 
 function clickFunction() {
     if (eraseTool)
@@ -216,33 +224,37 @@ function clickFunction() {
 }
 
 function isNotEmpty(whichArray) {
-    let i;
-    let returnValue = false;
     switch (whichArray) {
         case 1:
-            for (i = 0; i < grid.length; i++) {
+            for (let i = 0; i < grid.length; i++) {
                 if (grid[i] !== 0 && grid[i] != null) return true;
             }
-            break;
+            return false;
+
         case 4:
-            for (i = 0; i < spriteGrid[spriteCellOn].gridColors.length; i++) {
-                if (spriteGrid[spriteCellOn].gridColors[i] != "0" && spriteGrid[spriteCellOn].gridColors[i] != null) returnValue = true;
+            if (!spriteGrid || spriteCellOn == null || spriteCellOn < 0) return false;
+            if (!spriteGrid[spriteCellOn]) return false;
+            for (let i = 0; i < spriteGrid[spriteCellOn].gridColors.length; i++) {
+                if (spriteGrid[spriteCellOn].gridColors[i] !== "0" && spriteGrid[spriteCellOn].gridColors[i] != null) return true;
             }
-            break;
+            return false;
+
         case 5:
-            for (i = 0; i < levelGrid[spriteCellOn].grid.length; i++) {
-                if (levelGrid[spriteCellOn].grid[i] != "0" && spriteGrid[spriteCellOn].grid[i] != null) returnValue = true;
-            }
+            returnValue = (levelCellOn != null &&
+                levelCellOn >= 0 &&
+                levelHasSpriteAt(levelCellOn));
             break;
     }
-    return returnValue;
+    return false;
 }
 
+
 function levelClickFunction() {
-    if (pasteLevelSprite)
+    if (pasteLevelSprite) {
         addToLevelGrid(1);
-    else
-        if (isNotEmpty(5)) levelSpriteChosen = levelCellOn;
+    } else {
+        if (levelHasSpriteAt(levelCellOn)) levelSpriteChosen = levelCellOn;
+    }
 }
 
 function showBgFunc() {

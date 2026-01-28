@@ -111,7 +111,7 @@ function eraseSpriteById(id) {
     if (selectedSpriteId === id) selectedSpriteId = -1;
 }
 
-function spriteSheetClick() {
+function spriteSheetClick(e) {
     // If we are dragging, ignore click events (mouseup will fire, then click fires — classic browser behavior)
     if (typeof isMovingSprite === "function" && isMovingSprite()) return;
 
@@ -167,8 +167,18 @@ function beginSpriteMoveAtCellIndex(idx) {
     const spriteId = sheetOcc[idx];
     if (spriteId === -1) return;
 
-    // Only allow moving the currently selected sprite
-    if (spriteId !== selectedSpriteId) return;
+    // Old behavior: clicking a sprite implicitly selects it, then allows drag-move
+    if (spriteId !== selectedSpriteId) {
+        selectedSpriteId = spriteId;
+
+        // Keep RMB metadata in sync too
+        spriteRMB._domVar = {
+            spriteId: sprites[selectedSpriteId]?.id ?? selectedSpriteId,
+            spriteCellOn: idx,
+            sprite: sprites[selectedSpriteId]
+        };
+    }
+
 
     const s = sprites[spriteId];
     if (!s) return;
@@ -328,53 +338,160 @@ function markSheetStaticDirty() {
 }
 
 function spriteSheetMouseDown(e) {
-    if (e.button !== 0) return;
-    if (spriteCellOn < 0) return;
+    if (e.button === 0) {
+        if (spriteCellOn < 0) return;
 
-    const spriteId = sheetOcc[spriteCellOn];
-    if (spriteId === -1) return;
+        // Begin move immediately (no threshold reliance)
+        beginSpriteMoveAtCellIndex(spriteCellOn);
 
-    // Select immediately
-    selectedSpriteId = spriteId;
+        // Track whether we actually moved to a new cell
+        downX = mouseXSpriteCanvas;
+        downY = mouseYSpriteCanvas;
+        moveStarted = true;
+        moveMoved = false;
 
-    // Begin move immediately (no threshold reliance)
-    beginSpriteMoveAtCellIndex(spriteCellOn);
+        const s = sprites[movingSpriteId];
+        if (s) {
+            moveStartCellX = s.xCell;
+            moveStartCellY = s.yCell;
+        }
 
-    // Track whether we actually moved to a new cell
-    downX = mouseXSpriteCanvas;
-    downY = mouseYSpriteCanvas;
-    moveStarted = true;
-    moveMoved = false;
-
-    const s = sprites[movingSpriteId];
-    if (s) {
-        moveStartCellX = s.xCell;
-        moveStartCellY = s.yCell;
+        e.preventDefault?.();
     }
-
-    e.preventDefault?.();
 }
 
 
 
 
 function spriteSheetMouseUp(e) {
-    // If a move started but we never actually moved cells, treat as a click-select.
+    // If we're in a move transaction, mouse-up is ALWAYS the drop/commit moment,
+    // regardless of whether the cell under the cursor is occupied.
     if (typeof isMovingSprite === "function" && isMovingSprite()) {
         if (moveStarted && !moveMoved) {
-            // Restore sprite to origin but KEEP it selected (no cancel-unselect vibe)
-            cancelSpriteMove(false); // false => don't unselect
+            // It was just a click (no real drag) — restore, keep selection
+            cancelSpriteMove(false);
         } else {
+            // Real drag — commit to current preview target (or restore if invalid)
             commitSpriteMove();
         }
+
+        moveStarted = false;
+        moveMoved = false;
+
+        if (sheetMutatedThisInteraction) {
+            sheetStaticDirty = true;
+            sheetMutatedThisInteraction = false;
+        }
+
+        // Keep RMB state sane
+        makeSpriteContextFalse();
         requestRerender();
+        return;
     }
 
-    moveStarted = false;
-    moveMoved = false;
+    // Normal (non-move) behavior:
+    if (spriteCellOn < 0) return;
 
-    if (sheetMutatedThisInteraction) {
-        sheetStaticDirty = true;
-        sheetMutatedThisInteraction = false;
+    const spriteId = sheetOcc[spriteCellOn];
+    if (spriteId === -1) { makeSpriteContextFalse(); return; }
+
+    selectedSpriteId = spriteId;
+
+    spriteRMB._domVar = {
+        spriteId: sprites[selectedSpriteId].id,
+        spriteCellOn,
+        sprite: sprites[selectedSpriteId]
+    };
+
+    if (e.button === 1) {
+        e.preventDefault();
+        makeSpriteContextFalse();
+    } else if (e.button === 2) {
+        e.preventDefault();
+        spriteRMBMenuVisible = true;
+        spriteRMBHeader.innerText = `Sprite ID: ${spriteRMB._domVar.spriteId}`;
+        spriteRMB.style.display = "block";
+        spriteRMB.style.left = `${e.clientX + spriteRMBLocationOffset.x}px`;
+        spriteRMB.style.top = `${e.clientY + spriteRMBLocationOffset.y}px`;
     }
+}
+
+
+function checkSpriteContextMenu() {
+    if (!spriteRMBMenuVisible) {
+        spriteRMB.style.display = "none";
+    }
+}
+
+function makeSpriteContextFalse() {
+    spriteRMBMenuVisible = false;
+    checkSpriteContextMenu();
+}
+
+function spriteRMBClick(e) {
+    const getName = e.target?.dataset?.name;
+    const choice = getName?.substring(0, getName.indexOf("."));
+    if (!choice) return;
+    const { id, notes, sprite } = spriteRMB._domVar;
+    const spriteName = spriteRMB._domVar.name;
+    switch (choice) {
+        case "duplicate":
+            makeSpriteContextFalse();
+            spritesheetDuplicate();
+            break;
+        case "erase":
+            eraseSpriteById(spriteRMB._domVar.spriteId);
+            makeSpriteContextFalse();
+            break;
+        case "metadata":
+            makeSpriteContextFalse();
+            spriteMetadataDiv.style.display = "grid";
+
+            const spriteId = spriteRMB._domVar.spriteId;
+            const sprite = sprites[spriteId]; // or spriteRMB._domVar.sprite
+
+            metaId.value = spriteId;
+            metaSpriteName.value = sprite?.name || "Choose a Name for the Sprite.";
+            metaNotes.value = sprite?.notes || "Write some notes about this sprite.";
+
+            drawMetaPreviewSprite(sprite);
+            break;
+    }
+}
+
+function resetSpriteMetadataWindow() {
+    spriteMetadataDiv.style.display = 'none';
+    metaSpriteName.style.fontStyle = 'italic';
+    metaNotes.style.fontStyle = 'italic';
+}
+
+function spritesheetDuplicate() {
+    // must contain something
+    let any = false;
+    const sprite = sprites[selectedSpriteId];
+    const spriteArray = sprites[selectedSpriteId].pixels;
+
+    for (let i = 0; i < spriteArray.length; i++) {
+        if ((spriteArray[i] >>> 0) !== 0) { any = true; break; }
+    }
+    if (!any) return;
+
+
+    const wPx = sprite.wPx | 0;
+    const hPx = sprite.hPx | 0;
+
+    // Copy pixels into a plain Uint32Array
+    const pixels = new Uint32Array(wPx * hPx);
+    for (let i = 0; i < pixels.length; i++) pixels[i] = spriteArray[i] >>> 0;
+
+    // Convert px -> sheet cells (16px base)
+    const wCells = Math.max(1, Math.ceil(wPx / BASE_CELL_PX));
+    const hCells = Math.max(1, Math.ceil(hPx / BASE_CELL_PX));
+
+    mouseSprite = { wPx, hPx, pixels, wCells, hCells };
+
+    spriteHeld = true;
+    pasteSprite = true;
+    eraseTool = false;
+    requestRerender();
 }

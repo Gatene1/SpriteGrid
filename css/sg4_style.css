@@ -1,37 +1,38 @@
+:root { --BooskaPurple: #6930B4; --SystemGray: #d7d7d7; }
 body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
-.divTitle { position: absolute; background-color: darkgreen; width: 54%; height: 97%; top: 0px; left: 2.60%;
+.divTitle { position: absolute; background-color: var(--BooskaPurple); width: 54%; height: 97%; top: 0px; left: 2.60%;
     padding: 0px; margin: 0px; color: #ffffff; font-weight: bold; border: 2px solid #000000;
     user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex;
     flex-direction: column; justify-content: flex-start; flex-wrap: nowrap; visibility: visible;
     min-width: 0; min-height: 0; }
 
-.divTitle2 { position: absolute; background-color: darkgreen; width: 350px; height: 335px; bottom: 0px;
+.divTitle2 { position: absolute; background-color: var(--BooskaPurple); width: 350px; height: 335px; bottom: 0px;
     left: 57.00%; padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000;
     user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
     justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: visible; }
 
-.divTitle3 { position: absolute; background-color: darkgreen; width: 25%; height: 60%; top: 0px; left: 57.00%;
+.divTitle3 { position: absolute; background-color: var(--BooskaPurple); width: 25%; height: 60%; top: 0px; left: 57.00%;
     padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000;
     user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
     justify-content: flex-start; flex-wrap: nowrap; overflow: scroll; visibility: visible; }
 
-.divTitle4 { position: absolute; background-color: darkgreen; width: 300px; height: 50%; top: 0px; right: 0px;
+.divTitle4 { position: absolute; background-color: var(--BooskaPurple); width: 300px; height: 50%; top: 0px; right: 0px;
     padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000;
     user-select: none; -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
     justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: visible; }
 
-.divTitle5 { position: absolute; background-color: darkgreen; width: 300px; height: 49%; bottom: 0px; right: 0px;
+.divTitle5 { position: absolute; background-color: var(--BooskaPurple); width: 300px; height: 49%; bottom: 0px; right: 0px;
     padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000; user-select: none;
     -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
     justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: visible; }
 
-.divTitle6 { position: absolute; background-color: darkgreen; width: 50%; height: 49%; top: 200px; left: 27%;
+.divTitle6 { position: absolute; background-color: var(--BooskaPurple); width: 50%; height: 49%; top: 200px; left: 27%;
     padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000; user-select: none;
     -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
     justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: collapse; }
 
-.divTitle7 { position: absolute; background-color: darkgreen; width: 50%; height: 79%; top: 100px; left: 27%;
+.divTitle7 { position: absolute; background-color: var(--BooskaPurple); width: 50%; height: 79%; top: 100px; left: 27%;
     padding: 0px; margin: 0px; color: #ffffff; font-weight: normal; border: 2px solid #000000; user-select: none;
     -webkit-user-select: none; -ms-user-select: none; display: flex; flex-direction: column;
     justify-content: flex-start; flex-wrap: nowrap; overflow: clip; visibility: collapse;
@@ -40,7 +41,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide1 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 0px;
@@ -55,7 +56,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide2 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 23%;
@@ -70,7 +71,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide3 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 46%;
@@ -85,7 +86,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide4 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 69%;
@@ -100,7 +101,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide5 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 92%;
@@ -115,7 +116,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide6 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 115%;
@@ -130,7 +131,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 
 .divSide7 {
     position: relative;
-    background-color: darkgreen;
+    background-color: var(--BooskaPurple);
     width: 2.3%;
     height: 20%;
     top: 115%;
@@ -265,8 +266,68 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
     justify-content: flex-start;
 }
 
-.optionsMainDiv { display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 1rem; width: 100%; height: 100%;
-    background-color: #ffffff; }
+.optionsMainDiv { display: flex; flex-direction: column-reverse; align-items: flex-end; gap: .5rem; width: 100%; height: 100%;
+    background-color: #ffffff; overflow: hidden; }
+
+.optionsBooskaTuts {
+    display: grid;
+    grid-template-columns: .5fr 1fr;
+    align-items: end;
+    overflow: visible;
+}
+.divInnerBottomFlexColChildFile2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .25rem;
+}
+
+.imageFit {
+    width: 100%;
+    opacity: 100%;
+    translate: 0 15px;
+    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.25));
+}
+
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    color: #ffffff;
+    background: linear-gradient(
+            to bottom,
+            #2e8b57,
+            #237048
+    );
+
+    border: 1px solid #1d5f3d;
+    box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.25),
+            0 1px 2px rgba(0,0,0,0.35);
+
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-pill:hover {
+    background: linear-gradient(
+            to bottom,
+            #35a56a,
+            #2a8b59
+    );
+}
+
+.btn-pill:active {
+    transform: translateY(1px);
+    box-shadow:
+            inset 0 1px 2px rgba(0,0,0,0.35);
+}
 
 .divInnerBottomFlexColChildFile {
     display: grid;
@@ -286,18 +347,64 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 #uintToHexButton { padding: 0; margin: 0; }
 
 
-.divInnerBottomFlexColChildLevel {
-    width: 100%;
-    height: 96%;
-    text-align: center;
-    background-color: #ffffff;
-    overflow: clip;
+/* Level editor layout: canvas on left, controls on right */
+#levelLittleWindowHW .divInnerBottomFlexColChildLevel {
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-direction: row;      /* <-- IMPORTANT */
+    align-items: flex-start;
+    gap: 12px;
+    height: 100%;
+    background-color: #ffffff;
 }
+
+/* Keep the canvas wrapper from flex-stretching weirdly */
+#levelLittleWindowHW .divForLevelGrid {
+    flex: 0 0 auto;
+    position: relative;
+    background-color: #6185F8;
+}
+
+/* Make sure the canvas is a normal block element */
+#levelLittleWindowHW #levelCanvas {
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+.levelRightButtonDiv {
+    width: 20%;
+    height: 100%;
+    margin-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-content: center;
+    font-weight: bold;
+    color: #000000;
+}
+
+.bg-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;   /* ← prevents 2-line wrap */
+    border-radius: 6px;
+    background-color: #00ff00;
+    font-weight: bold;
+    padding: 8px 8px 8px 8px;
+
+}
+
+.bg-icon {
+    font-size: 1.6em;      /* ← this is where “big” lives */
+    line-height: 1;
+}
+
+.bg-text {
+    font-weight: 600;
+}
+
+.levelBtn .bg-icon { line-height: 1; }
 
 
 .dimRow input[type="number"] {
@@ -379,24 +486,7 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
     align-content: center;
 }
 
-.levelRightButtonDiv {
-    width: 20%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-content: center;
-    font-weight: bold;
-    color: #000000;
-}
-
 .divForSpriteGrid {
-    overflow: scroll;
-}
-
-.divForLevelGrid {
-    width: 80%;
-    height: 100%;
     overflow: scroll;
 }
 
@@ -612,4 +702,69 @@ body { font-family: "Trebuchet MS"; margin: 0px; overflow: clip; }
 .bumpBtn:active{
     transform: translateY(1px);
     background:#e9e9e9;
+}
+
+#spriteCanvas { pointer-events: auto; z-index: 1; }
+
+.spriteRMB {
+    display: none;
+    border: 1px solid black;
+    background-color: var(--SystemGray);
+    position: fixed;
+    width: 100px;
+    height: max-content;
+    z-index: 21;
+    -webkit-box-shadow: 5px 5px 15px 5px #000000;
+    box-shadow: 5px 5px 0 1px #000000a8;
+    color: #000;
+    font-weight: bold;
+    pointer-events: auto;
+}
+
+.ctx-menu {
+    margin: 0;
+    padding: 0;
+}
+
+.spriteMetadataDiv { position: absolute; display: none; width: 50rem; height: 24rem; z-index: 11; top: 50px;
+    margin-left: calc((100vw - 50rem) / 2); background-color: #ffffff; border: 2px solid #000000;
+    grid-template-columns: auto auto; grid-template-rows: 12% 12% 62% 14%;
+    grid-template-areas:
+            "left right1"
+            "left right2"
+            "left right3"
+            "left2 left2";
+    overflow: scroll; -webkit-box-shadow: 5px 5px 15px 5px #000000; box-shadow: 5px 5px 0 1px #000000a8; }
+
+.meta-left { grid-area: left; overflow: scroll; text-align: center; margin: auto auto; }
+
+#meta-Preview { border: 2px solid #000000; }
+
+.meta-right1 { grid-area: right1; padding-top: 4px; align-content: center; }
+
+.meta-right2 { grid-area: right2; padding-top: 5px; align-content: center; }
+
+.meta-right3 { display: flex; grid-area: right3; padding-top: 10px; padding-bottom: 10px; align-content: start; }
+
+#spriteName { width: 80%; font-style: italic; }
+
+.meta-left2 { display: inline-flex; grid-area: left2;  align-content: center; background-color: #ffffff;
+    margin: auto auto; gap: 80px; }
+
+.spriteMetadataDiv [class^="meta-"] { font-weight: bold; }
+.tableTDBorderBottom, #spriteRMBHeader { border-bottom: 3px groove #1e1e1e; }
+#notes { font-family: "arial";  width: 80%; font-style: italic; }
+#meta-btn { border: 2px solid #000000; }
+#meta-btn2 { border: 2px solid #000000; }
+
+[data-name$="selectable"]{
+    color: #1e1e1e;
+    font-weight: bold;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+[data-name$="selectable"]:hover {
+    background-color: #1e1e1e;
+    color: #fff;
 }

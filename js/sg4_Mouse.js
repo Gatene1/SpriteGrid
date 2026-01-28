@@ -31,48 +31,56 @@
                 littleWindow.style.top = (mousePosition.y + mousePositionOffset[1]) + 'px';
             }
         }
-        function gearClick() {
-            switch (window1Color) {
+        function gearClick(windowNumber, whichWindow, whichSide) {
+            switch (windowNumber) {
+
+                case "BooskaPurple":
+                    windowNumber = "Green";
+                    whichWindow.style.backgroundColor = "darkgreen";
+                    whichSide.style.backgroundColor = "darkgreen";
+                    break;
+
                 case "Green" :
-                    window1Color = "Red";
-                    littleWindow.style.backgroundColor = "darkred";
-                    divSide1.style.backgroundColor = "darkred";
+                    windowNumber = "Red";
+                    whichWindow.style.backgroundColor = "darkred";
+                    whichSide.style.backgroundColor = "darkred";
                     break;
 
                 case "Red" :
-                    window1Color = "Blue";
-                    littleWindow.style.backgroundColor = "midnightblue";
-                    divSide1.style.backgroundColor = "midnightblue";
+                    windowNumber = "Blue";
+                    whichWindow.style.backgroundColor = "midnightblue";
+                    whichSide.style.backgroundColor = "midnightblue";
                     break;
 
                 case "Blue" :
-                    window1Color = "Black";
-                    littleWindow.style.backgroundColor = "#000000";
-                    divSide1.style.backgroundColor = "#000000";
+                    windowNumber = "Black";
+                    whichWindow.style.backgroundColor = "#000000";
+                    whichSide.style.backgroundColor = "#000000";
                     break;
 
                 case "Black" :
-                    window1Color = "White";
-                    littleWindow.style.backgroundColor = "#ffffff";
-                    littleWindow.style.color = "#000000";
-                    divSide1.style.backgroundColor = "#ffffff";
-                    divSide1.style.color = "#000000";
+                    windowNumber = "White";
+                    whichWindow.style.backgroundColor = "#ffffff";
+                    whichWindow.style.color = "#000000";
+                    whichSide.style.backgroundColor = "#ffffff";
+                    whichSide.style.color = "#000000";
                     break;
 
                 case "White" :
-                    window1Color = "Yellow";
-                    littleWindow.style.backgroundColor = "khaki";
-                    divSide1.style.backgroundColor = "khaki";
+                    windowNumber = "Yellow";
+                    whichWindow.style.backgroundColor = "khaki";
+                    whichSide.style.backgroundColor = "khaki";
                     break;
 
                 case "Yellow" :
-                    window1Color = "Green";
-                    littleWindow.style.backgroundColor = "darkgreen";
-                    littleWindow.style.color = "#ffffff";
-                    divSide1.style.backgroundColor = "darkgreen";
-                    divSide1.style.color = "#ffffff";
+                    windowNumber = "BooskaPurple";
+                    whichWindow.style.backgroundColor = "#6930B4";
+                    whichWindow.style.color = "#ffffff";
+                    whichSide.style.backgroundColor = "#6930B4";
+                    whichSide.style.color = "#ffffff";
                     break;
             }
+            return windowNumber;
         }
 
 // functions for Second Window (Preview)
@@ -106,49 +114,6 @@
                 };
                 prevLittleWindow.style.left = (prevMousePosition.x + prevMousePositionOffset[0]) + 'px';
                 prevLittleWindow.style.top = (prevMousePosition.y + prevMousePositionOffset[1]) + 'px';
-            }
-        }
-        function prevGearClick() {
-            switch (window2Color) {
-                case "Green" :
-                    window2Color = "Red";
-                    prevLittleWindow.style.backgroundColor = "darkred";
-                    divSide2.style.backgroundColor = "darkred";
-                    break;
-
-                case "Red" :
-                    window2Color = "Blue";
-                    prevLittleWindow.style.backgroundColor = "midnightblue";
-                    divSide2.style.backgroundColor = "midnightblue";
-                    break;
-
-                case "Blue" :
-                    window2Color = "Black";
-                    prevLittleWindow.style.backgroundColor = "#000000";
-                    divSide2.style.backgroundColor = "#000000";
-                    break;
-
-                case "Black" :
-                    window2Color = "White";
-                    prevLittleWindow.style.backgroundColor = "#ffffff";
-                    prevLittleWindow.style.color = "#000000";
-                    divSide2.style.backgroundColor = "#ffffff";
-                    divSide2.style.color = "#000000";
-                    break;
-
-                case "White" :
-                    window2Color = "Yellow";
-                    prevLittleWindow.style.backgroundColor = "khaki";
-                    divSide2.style.backgroundColor = "khaki";
-                    break;
-
-                case "Yellow" :
-                    window2Color = "Green";
-                    prevLittleWindow.style.backgroundColor = "darkgreen";
-                    prevLittleWindow.style.color = "#ffffff";
-                    divSide2.style.backgroundColor = "darkgreen";
-                    divSide2.style.color = "#ffffff";
-                    break;
             }
         }
 // functions for Third Window (Color Iro.js)
@@ -185,49 +150,6 @@ function colorUpdateMousePos(e) {
         colorLittleWindow.style.top = (colorMousePosition.y + colorMousePositionOffset[1]) + 'px';
     }
 }
-function colorGearClick() {
-    switch (window3Color) {
-        case "Green" :
-            window3Color = "Red";
-            colorLittleWindow.style.backgroundColor = "darkred";
-            divSide3.style.backgroundColor = "darkred";
-            break;
-
-        case "Red" :
-            window3Color = "Blue";
-            colorLittleWindow.style.backgroundColor = "midnightblue";
-            divSide3.style.backgroundColor = "midnightblue";
-            break;
-
-        case "Blue" :
-            window3Color = "Black";
-            colorLittleWindow.style.backgroundColor = "#000000";
-            divSide3.style.backgroundColor = "#000000";
-            break;
-
-        case "Black" :
-            window3Color = "White";
-            colorLittleWindow.style.backgroundColor = "#ffffff";
-            colorLittleWindow.style.color = "#000000";
-            divSide3.style.backgroundColor = "#ffffff";
-            divSide3.style.color = "#000000";
-            break;
-
-        case "White" :
-            window3Color = "Yellow";
-            colorLittleWindow.style.backgroundColor = "khaki";
-            divSide3.style.backgroundColor = "khaki";
-            break;
-
-        case "Yellow" :
-            window3Color = "Green";
-            colorLittleWindow.style.backgroundColor = "darkgreen";
-            colorLittleWindow.style.color = "#ffffff";
-            divSide3.style.backgroundColor = "darkgreen";
-            divSide3.style.color = "#ffffff";
-            break;
-    }
-}
 
 // functions for Fourth Window (Grid Output)
 // =====================================
@@ -262,49 +184,6 @@ function outUpdateMousePos(e) {
         outLittleWindow.style.top = (outMousePosition.y + outMousePositionOffset[1]) + 'px';
     }
 }
-function outGearClick() {
-    switch (window4Color) {
-        case "Green" :
-            window4Color = "Red";
-            outLittleWindow.style.backgroundColor = "darkred";
-            divSide4.style.backgroundColor = "darkred";
-            break;
-
-        case "Red" :
-            window4Color = "Blue";
-            outLittleWindow.style.backgroundColor = "midnightblue";
-            divSide4.style.backgroundColor = "midnightblue";
-            break;
-
-        case "Blue" :
-            window4Color = "Black";
-            outLittleWindow.style.backgroundColor = "#000000";
-            divSide4.style.backgroundColor = "#000000";
-            break;
-
-        case "Black" :
-            window4Color = "White";
-            outLittleWindow.style.backgroundColor = "#ffffff";
-            outLittleWindow.style.color = "#000000";
-            divSide4.style.backgroundColor = "#ffffff";
-            divSide4.style.color = "#000000";
-            break;
-
-        case "White" :
-            window4Color = "Yellow";
-            outLittleWindow.style.backgroundColor = "khaki";
-            divSide4.style.backgroundColor = "khaki";
-            break;
-
-        case "Yellow" :
-            window4Color = "Green";
-            outLittleWindow.style.backgroundColor = "darkgreen";
-            outLittleWindow.style.color = "#ffffff";
-            divSide4.style.backgroundColor = "darkgreen";
-            divSide4.style.color = "#ffffff";
-            break;
-    }
-}
 
 // functions for Fifth Window (File Saving)
 // =====================================
@@ -337,49 +216,6 @@ function fileUpdateMousePos(e) {
         };
         fileLittleWindow.style.left = (fileMousePosition.x + fileMousePositionOffset[0]) + 'px';
         fileLittleWindow.style.top = (fileMousePosition.y + fileMousePositionOffset[1]) + 'px';
-    }
-}
-function fileGearClick() {
-    switch (window5Color) {
-        case "Green" :
-            window5Color = "Red";
-            fileLittleWindow.style.backgroundColor = "darkred";
-            divSide5.style.backgroundColor = "darkred";
-            break;
-
-        case "Red" :
-            window5Color = "Blue";
-            fileLittleWindow.style.backgroundColor = "midnightblue";
-            divSide5.style.backgroundColor = "midnightblue";
-            break;
-
-        case "Blue" :
-            window5Color = "Black";
-            fileLittleWindow.style.backgroundColor = "#000000";
-            divSide5.style.backgroundColor = "#000000";
-            break;
-
-        case "Black" :
-            window5Color = "White";
-            fileLittleWindow.style.backgroundColor = "#ffffff";
-            fileLittleWindow.style.color = "#000000";
-            divSide5.style.backgroundColor = "#ffffff";
-            divSide5.style.color = "#000000";
-            break;
-
-        case "White" :
-            window5Color = "Yellow";
-            fileLittleWindow.style.backgroundColor = "khaki";
-            divSide5.style.backgroundColor = "khaki";
-            break;
-
-        case "Yellow" :
-            window5Color = "Green";
-            fileLittleWindow.style.backgroundColor = "darkgreen";
-            fileLittleWindow.style.color = "#ffffff";
-            divSide5.style.backgroundColor = "darkgreen";
-            divSide5.style.color = "#ffffff";
-            break;
     }
 }
 
@@ -417,52 +253,10 @@ function spriteUpdateMousePos(e) {
         spriteLittleWindow.style.top = (spriteMousePosition.y + spriteMousePositionOffset[1]) + 'px';
     }
 }
-function spriteGearClick() {
-    switch (window6Color) {
-        case "Green" :
-            window6Color = "Red";
-            spriteLittleWindow.style.backgroundColor = "darkred";
-            divSide6.style.backgroundColor = "darkred";
-            break;
 
-        case "Red" :
-            window6Color = "Blue";
-            spriteLittleWindow.style.backgroundColor = "midnightblue";
-            divSide6.style.backgroundColor = "midnightblue";
-            break;
-
-        case "Blue" :
-            window6Color = "Black";
-            spriteLittleWindow.style.backgroundColor = "#000000";
-            divSide6.style.backgroundColor = "#000000";
-            break;
-
-        case "Black" :
-            window6Color = "White";
-            spriteLittleWindow.style.backgroundColor = "#ffffff";
-            spriteLittleWindow.style.color = "#000000";
-            divSide6.style.backgroundColor = "#ffffff";
-            divSide6.style.color = "#000000";
-            break;
-
-        case "White" :
-            window6Color = "Yellow";
-            spriteLittleWindow.style.backgroundColor = "khaki";
-            divSide6.style.backgroundColor = "khaki";
-            break;
-
-        case "Yellow" :
-            window6Color = "Green";
-            spriteLittleWindow.style.backgroundColor = "darkgreen";
-            spriteLittleWindow.style.color = "#ffffff";
-            divSide6.style.backgroundColor = "darkgreen";
-            divSide6.style.color = "#ffffff";
-            break;
-    }
-}
-
-// functions for Seventh Window (Level Editor)
-// =====================================
+// ===============================================
+// = functions for Seventh Window (Level Editor) =
+// ===============================================
 function levelLittleWindowClick() {
     windowZRearrange(6);
     windowZRefresh();
@@ -492,49 +286,6 @@ function levelUpdateMousePos(e) {
         };
         levelLittleWindow.style.left = (levelMousePosition.x + levelMousePositionOffset[0]) + 'px';
         levelLittleWindow.style.top = (levelMousePosition.y + levelMousePositionOffset[1]) + 'px';
-    }
-}
-function levelGearClick() {
-    switch (window7Color) {
-        case "Green" :
-            window7Color = "Red";
-            levelLittleWindow.style.backgroundColor = "darkred";
-            divSide7.style.backgroundColor = "darkred";
-            break;
-
-        case "Red" :
-            window7Color = "Blue";
-            levelLittleWindow.style.backgroundColor = "midnightblue";
-            divSide7.style.backgroundColor = "midnightblue";
-            break;
-
-        case "Blue" :
-            window7Color = "Black";
-            levelLittleWindow.style.backgroundColor = "#000000";
-            divSide7.style.backgroundColor = "#000000";
-            break;
-
-        case "Black" :
-            window7Color = "White";
-            levelLittleWindow.style.backgroundColor = "#ffffff";
-            levelLittleWindow.style.color = "#000000";
-            divSide7.style.backgroundColor = "#ffffff";
-            divSide7.style.color = "#000000";
-            break;
-
-        case "White" :
-            window7Color = "Yellow";
-            levelLittleWindow.style.backgroundColor = "khaki";
-            divSide7.style.backgroundColor = "khaki";
-            break;
-
-        case "Yellow" :
-            window7Color = "Green";
-            levelLittleWindow.style.backgroundColor = "darkgreen";
-            levelLittleWindow.style.color = "#ffffff";
-            divSide7.style.backgroundColor = "darkgreen";
-            divSide7.style.color = "#ffffff";
-            break;
     }
 }
 
@@ -677,14 +428,17 @@ function gridUpdateMousePosSpriteSheet(e) {
 
 
 
-function mouseSpriteSheetLeave() {
-    // pendingGrab = false;
+function mouseSpriteSheetLeave(e) {
+    // If we left the canvas INTO the RMB menu, ignore.
+    const toEl = e.relatedTarget;
+    if (toEl && spriteRMB && spriteRMB.contains(toEl)) return;
 
     // If the cursor leaves the sheet while moving, cancel the move.
     if (typeof isMovingSprite === "function" && isMovingSprite()) {
         cancelSpriteMove?.(true);
         requestRerender();
     }
+
     spriteHeld = false;
     eraseTool = false;
     stopEraseTool();
@@ -692,32 +446,41 @@ function mouseSpriteSheetLeave() {
     mouseSprite = null;
     spriteCellOn = -1;
     hoveredSpriteId = -1;
+    makeSpriteContextFalse();
     requestRerender();
 }
 
 
 
+
 function gridUpdateMousePosLevelEditor(e) {
-    let rect = levelCanvas.getBoundingClientRect();
-    let root = document.documentElement;
-    let x, y;
+    levelSyncToCanvas();
 
-    // Get the X & Y coordinates of the mouse while hovering over the Level Editor canvas.
-    mouseXLevelCanvas = e.clientX - rect.left - root.scrollLeft;
-    mouseYLevelCanvas = e.clientY - rect.top - root.scrollTop;
-    squaresForLevelGridWidth = Math.floor(levelCanvasWidth / levelGridCellSize); // Should be 17 initially
+    const rect = levelCanvas.getBoundingClientRect();
+    const scaleX = levelCanvas.width / rect.width;
+    const scaleY = levelCanvas.height / rect.height;
 
-    // if the mouse cursor is within the boundaries of the grid, then calculate which cell the mouse cursor is hovering over.
-    if ((mouseXLevelCanvas <= levelGridSize * squaresForLevelGridWidth) && (mouseYLevelCanvas <= spriteGridSize / squaresForLevelGridWidth * levelGridSize))
-        levelCellOn = (Math.floor(mouseYLevelCanvas / levelGridCellSize) * squaresForLevelGridWidth) + Math.floor(mouseXLevelCanvas / levelGridCellSize);
+    mouseXLevelCanvas = (e.clientX - rect.left) * scaleX;
+    mouseYLevelCanvas = (e.clientY - rect.top)  * scaleY;
 
-    if(levelLmbDown) {
-        y = Math.floor(levelCellOn / squaresForLevelGridWidth);
-        x = levelCellOn - (y * squaresForLevelGridWidth) // 73 = 4th row 5th col
+    const col = Math.floor(mouseXLevelCanvas / levelGridCellSize);
+    const row = Math.floor(mouseYLevelCanvas / levelGridCellSize);
+
+    if (col < 0 || row < 0 || col >= squaresForLevelGridWidth || row >= squaresForLevelGridHeight) {
+        levelCellOn = -1;
+        return;
+    }
+
+    levelCellOn = row * squaresForLevelGridWidth + col;
+
+    if (levelLmbDown) {
         addToLevelGrid(1);
-        //drawLevelSprite(levelCellOn, x * levelGridCellSize, y * levelGridCellSize);
+        requestRerender();
+    } else {
+        requestRerender(); // keeps hover highlight responsive
     }
 }
+
 
 function mouseLevelEditorLeave() {
     levelSpriteHeld = false;

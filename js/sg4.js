@@ -19,7 +19,8 @@ var firstDraw = true;
 var closingWindow = false;
 var prevWindowToHaveFocus = 0;
 var canvasGrid, canvasGridCTX, colorCanvas, colorCanvasCTX, colorChooseRow1, colorChooseRow1CTX, previewWindow,
-    previewWindowCTX, spriteCanvas, spriteCanvasCTX, levelCanvas, levelCanvasCTX, previewCanvas, previewCanvasCTX;
+    previewWindowCTX, spriteCanvas, spriteCanvasCTX, levelCanvas, levelCanvasCTX, previewCanvas, previewCanvasCTX,
+    metaPreview, metaPreviewCTX;
 var mouseXGrid, mouseYGrid, mouseXSpriteGrid, mouseYSpriteGrid, mouseXPreviewCanvas, mouseYPreviewCanvas;
 var pixelsPerUnit = 2;
 var gridSize = 16;
@@ -160,7 +161,7 @@ var titleBar = document.getElementById("titleBarHW");
 var littleWindow = document.getElementById("littleWindowHW");
 var gearHW = document.getElementById("gearHW");
 var closeHW = document.getElementById("closeHW");
-var window1Color = "Green";
+var window1Color = "BooskaPurple";
 var divSide1 = document.getElementById("divSide1");
 var resetGridButton = document.getElementById("resetGridButton");
 var showGridCheckbox = document.getElementById("showGridCheckbox");
@@ -212,7 +213,7 @@ var prevTitleBar = document.getElementById("prevTitleBarHW");
 var prevLittleWindow = document.getElementById("prevLittleWindowHW");
 var prevGearHW = document.getElementById("prevGearHW");
 var prevCloseHW = document.getElementById("prevCloseHW");
-var window2Color = "Green";
+var window2Color = "BooskaPurple";
 var divSide2 = document.getElementById("divSide2");
 
 const scale = Math.min(PREV_CANVAS_WIDTH / gridSize, PREV_CANVAS_HEIGHT / gridSize);
@@ -238,7 +239,7 @@ var colorTitleBar = document.getElementById("colorTitleBarHW");
 var colorLittleWindow = document.getElementById("colorLittleWindowHW");
 var colorGearHW = document.getElementById("colorGearHW");
 var colorCloseHW = document.getElementById("colorCloseHW");
-var window3Color = "Green";
+var window3Color = "BooskaPurple";
 var divSide3 = document.getElementById("divSide3");
 var saveButton = document.getElementById("saveButton");
 var loadPalletteButton = document.getElementById('loadPalletteButton');
@@ -256,7 +257,7 @@ var outTitleBar = document.getElementById("outTitleBarHW");
 var outLittleWindow = document.getElementById("outLittleWindowHW");
 var outGearHW = document.getElementById("outGearHW");
 var outCloseHW = document.getElementById("outCloseHW");
-var window4Color = "Green";
+var window4Color = "BooskaPurple";
 var divSide4 = document.getElementById("divSide4");
 
 // Vars for Fifth Window (File Saving)
@@ -267,7 +268,7 @@ var fileTitleBar = document.getElementById("fileTitleBarHW");
 var fileLittleWindow = document.getElementById("fileLittleWindowHW");
 var fileGearHW = document.getElementById("fileGearHW");
 var fileCloseHW = document.getElementById("fileCloseHW");
-var window5Color = "Green";
+var window5Color = "BooskaPurple";
 var divSide5 = document.getElementById("divSide5");
 var fileSavingOpenButton = document.getElementById("fileSavingOpenButton");
 var fileSavingSaveButton = document.getElementById("fileSavingSaveButton");
@@ -289,7 +290,7 @@ var spriteLittleWindow = document.getElementById("spriteLittleWindowHW");
 var spriteGearHW = document.getElementById("spriteGearHW");
 var spriteCloseHW = document.getElementById("spriteCloseHW");
 var divForSpriteGrid = document.getElementById("divForSpriteGrid");
-var window6Color = "Green";
+var window6Color = "BooskaPurple";
 var divSide6 = document.getElementById("divSide6");
 var spriteWindowWidth, spriteWindowHeight;
 var spriteCellOn = -1;
@@ -370,7 +371,19 @@ let moveStartCellY = 0;
 let grabOffX = 0;  // in CELLS
 let grabOffY = 0;  // in CELLS
 
-
+// Sprite Sheet Editor's RMB menu (contextmenu) DOM element references.
+var spriteRMB = document.getElementById("spriteRMB");
+var spriteRMBTable = document.getElementById("spriteRMBTable");
+const spriteRMBLocationOffset = { x: 8, y: 12 };
+let spriteRMBMenuVisible = false;
+let mouseInSpriteRMBMenu = false;
+let spriteRMBHeader = document.getElementById("spriteRMBHeader");
+let spriteMetadataDiv = document.getElementById("spriteMetadataDiv");
+let metabtn = document.getElementById("meta-btn");
+let metabtn2 = document.getElementById("meta-btn2");
+let metaId = document.getElementById("id");
+let metaSpriteName = document.getElementById("spriteName");
+let metaNotes = document.getElementById("notes");
 
 // Vars for Seventh Window (Level Editor)
 var levelLmbDown = false;
@@ -380,7 +393,7 @@ var levelTitleBar = document.getElementById("levelTitleBarHW");
 var levelLittleWindow = document.getElementById("levelLittleWindowHW");
 var levelGearHW = document.getElementById("levelGearHW");
 var levelCloseHW = document.getElementById("levelCloseHW");
-var window7Color = "Green";
+var window7Color = "BooskaPurple";
 var divSide7 = document.getElementById("divSide7");
 var levelCanvasWidth = 544;
 var levelCanvasHeight = 480;
@@ -388,7 +401,7 @@ var levelGrid = [];
 var levelGridCellSize = 32;
 var levelGridInCellSize = 32;
 var levelSpriteInCellSize = 2;
-var bgColorChoose = 4294477153;
+var bgColorChoose = 42e4477153;
 var levelBgColor = document.getElementById("levelBgColor");
 var levelImportSpriteChosen = document.getElementById("levelImportSpriteChosen")
 var levelSpriteHeld = false;
@@ -400,7 +413,6 @@ var squaresForLevelGridWidth, squaresForLevelGridHeight;
 var levelCellOn;
 var levelGridSize;
 window.showLevelGridCheckbox = document.getElementById("showLevelGridCheckbox");
-window.saveLevelPNGButton = document.getElementById("saveLevelPNGButton");
 window.levelDebugging = document.getElementById("levelDebugging");
 
 
@@ -435,6 +447,8 @@ window.onload = function() {
 
     spriteCanvas = document.getElementById("spriteCanvas");
     spriteCanvasCTX = spriteCanvas.getContext('2d');
+    metaPreview = document.getElementById("meta-Preview");
+    metaPreviewCTX = metaPreview.getContext('2d');
     spriteWindowWidth = spriteCanvas.width;
     spriteWindowHeight = spriteCanvas.height;
     initSheetStaticLayer();
@@ -601,6 +615,7 @@ window.onload = function() {
     colorPicker.on('color:change', function(color) {
         if (sg4.StateMachine === State.NORMAL) {
             const bytes = iroToBytes(color.rgba);
+            const cPI = colorPicker.color.rgb;
 
             // canonical internal
             currColor = packNative(bytes.r, bytes.g, bytes.b, bytes.aByte);
@@ -611,6 +626,13 @@ window.onload = function() {
             // uint32 shows chosen paradigm but derived from canonical
             colorTextElementUint32.value = String(nativeToFormatUint32(currColor, sg4.ColorParadigm));
             drawPreviewSquare(100);
+            levelBgColor.style.backgroundColor = colorPicker.color.rgbString;
+            if (getLuminance(cPI.r, cPI.g, cPI.b) < 128) {
+                levelBgColor.style.color = "#FFFFFF";
+            } else {
+                levelBgColor.style.color = "#000000";
+            }
+
         }
     });
 
@@ -661,7 +683,7 @@ window.onload = function() {
     littleWindow.addEventListener('wheel', e => { changeCellSizeByWheel(e) }, { passive: false });
     titleBar.addEventListener('mousedown', divTitleClick, false);
     titleBar.addEventListener('mouseup', divTitleUnClick, true);
-    gearHW.addEventListener('mousedown', gearClick, true);
+    gearHW.addEventListener('mousedown', () => window1Color = gearClick(window1Color, littleWindow, divSide1), true);
     closeHW.addEventListener('mousedown', function() { closeWindow(0); }, false);
     resetGridButton.addEventListener('mousedown', zeroOutRefresh, true);
     showGridCheckbox.addEventListener('change', turnGridOnOff, true);
@@ -711,7 +733,7 @@ window.onload = function() {
     prevLittleWindow.addEventListener('mousedown', prevLittleWindowClick, false);
     prevTitleBar.addEventListener('mousedown', prevDivTitleClick, false);
     prevTitleBar.addEventListener('mouseup', prevDivTitleUnClick, true);
-    prevGearHW.addEventListener('mousedown', prevGearClick, true);
+    prevGearHW.addEventListener('mousedown', () => window2Color = gearClick(window2Color, prevLittleWindow, divSide2), true);
     prevCloseHW.addEventListener('mousedown', function() { closeWindow(1); }, true);
     previewSelect.addEventListener('change', previewScale, true);
 
@@ -731,7 +753,7 @@ window.onload = function() {
     colorLittleWindow.addEventListener('mousedown', colorLittleWindowClick, false);
     colorTitleBar.addEventListener('mousedown', colorDivTitleClick, false);
     colorTitleBar.addEventListener('mouseup', colorDivTitleUnClick, true);
-    colorGearHW.addEventListener('mousedown', colorGearClick, true);
+    colorGearHW.addEventListener('mousedown', () => window3Color = gearClick(window3Color, colorLittleWindow, divSide3), true);
     colorCloseHW.addEventListener('mousedown', function() { closeWindow(2); }, true);
     colorChooseRow1.addEventListener('click', activateColor, true);
     colorChooseRow1.addEventListener('mousemove', gridUpdateMousePosColorChoose, true);
@@ -769,14 +791,14 @@ window.onload = function() {
     outLittleWindow.addEventListener('mousedown', outLittleWindowClick, false);
     outTitleBar.addEventListener('mousedown', outDivTitleClick, false);
     outTitleBar.addEventListener('mouseup', outDivTitleUnClick, true);
-    outGearHW.addEventListener('mousedown', outGearClick, true);
+    outGearHW.addEventListener('mousedown', () => window4Color = gearClick(window4Color, outLittleWindow, divSide4), true);
     outCloseHW.addEventListener('mousedown', function() { closeWindow(3); }, true);
 
     // Listeners for Fifth Window (File Saving)
     fileLittleWindow.addEventListener('mousedown', fileLittleWindowClick, false);
     fileTitleBar.addEventListener('mousedown', fileDivTitleClick, false);
     fileTitleBar.addEventListener('mouseup', fileDivTitleUnClick, true);
-    fileGearHW.addEventListener('mousedown', fileGearClick, true);
+    fileGearHW.addEventListener('mousedown', () => window5Color = gearClick(window5Color, fileLittleWindow, divSide5), true);
     fileCloseHW.addEventListener('mousedown', function() { closeWindow(4); }, true);
     hexToUintButton.addEventListener("click", function () {
         const bytes = hexToBytes(hexToUintText.value); // expects #RRGGBBAA
@@ -802,13 +824,14 @@ window.onload = function() {
     spriteLittleWindow.addEventListener('mousedown', spriteLittleWindowClick, false);
     spriteTitleBar.addEventListener('mousedown', spriteDivTitleClick, false);
     spriteTitleBar.addEventListener('mouseup', spriteDivTitleUnClick, true);
-    spriteGearHW.addEventListener('mousedown', spriteGearClick, true);
+    spriteGearHW.addEventListener('mousedown', () => window6Color = gearClick(window6Color, spriteLittleWindow, divSide6), true);
     spriteCloseHW.addEventListener('mousedown', function() { closeWindow(5); }, true);
     spriteCanvas.addEventListener('mousemove', gridUpdateMousePosSpriteSheet, true);
-    spriteCanvas.addEventListener('mouseleave', mouseSpriteSheetLeave, true);
+    spriteCanvas.addEventListener('mouseout', mouseSpriteSheetLeave);
     spriteCanvas.addEventListener('click', spriteSheetClick, true);
 
     spriteCanvas.addEventListener('mousedown', spriteSheetMouseDown, true);
+    spriteCanvas.addEventListener('contextmenu', (e) => { e.preventDefault(); }, { passive: false });
     spriteCanvas.addEventListener('mouseup', spriteSheetMouseUp, true);
 
     divForSpriteGrid.addEventListener('scroll', debugAction, true);
@@ -822,10 +845,34 @@ window.onload = function() {
         //guardUnsaved("sprites", "SpriteSheet", actuallyOpenSpriteSheet);
         actuallyOpenSpriteSheet();
     });
-
     newSSheet.addEventListener("click", () => {
        // guardUnsaved("sprites", "SpriteSheet", actuallyNewSpriteSheet);
         actuallyNewSpriteSheet();
+    });
+    spriteRMB.addEventListener('click', spriteRMBClick);
+    metabtn.addEventListener('click', () => {
+        const spriteId = spriteRMB._domVar.spriteId;
+        spriteRMB._domVar.sprite.name = metaSpriteName.value;
+        spriteRMB._domVar.sprite.notes = metaNotes.value;
+        resetSpriteMetadataWindow();
+    });
+    // If "Cancel" on the metadata dialog box is clicked.
+    metabtn2.addEventListener('click', () => { resetSpriteMetadataWindow(); });
+   ['click', 'focus'].forEach(en => {
+       metaSpriteName.addEventListener(en, () => {
+           if (metaSpriteName.value === "Choose a Name for the Sprite.") {
+               metaSpriteName.value = "";
+               metaSpriteName.style.fontStyle = 'normal';
+           }
+       })
+   });
+    ['click', 'focus'].forEach(en => {
+        metaNotes.addEventListener(en, () => {
+            if (metaNotes.value === "Write some notes about this sprite.") {
+                metaNotes.value = "";
+                metaNotes.style.fontStyle = 'normal';
+            }
+        })
     });
 
 
@@ -834,7 +881,7 @@ window.onload = function() {
     levelLittleWindow.addEventListener('mousedown', levelLittleWindowClick, false);
     levelTitleBar.addEventListener('mousedown', levelDivTitleClick, false);
     levelTitleBar.addEventListener('mouseup', levelDivTitleUnClick, true);
-    levelGearHW.addEventListener('mousedown', levelGearClick, true);
+    levelGearHW.addEventListener('mousedown', () => window7Color = gearClick(window7Color, levelLittleWindow, divSide7), true);
     levelCloseHW.addEventListener('mousedown', function() { closeWindow(6); }, true);
     levelBgColor.addEventListener('click', changeLevelBG, true);
     levelImportSpriteChosen.addEventListener('click', levelUseSpriteChosen, true);
@@ -844,6 +891,5 @@ window.onload = function() {
     levelCanvas.addEventListener('mousedown', mouseLevelEditorDown, true);
     levelCanvas.addEventListener('mouseup', mouseLevelEditorUp, true);
     showLevelGridCheckbox.addEventListener('click', turnLevelGridOnOff);
-    saveLevelPNGButton.addEventListener('click', saveLevelGridAsPNG);
 }
 

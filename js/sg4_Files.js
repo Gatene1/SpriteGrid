@@ -57,6 +57,76 @@ const spriteSheetOptions = {
     multiple: false,
 };
 
+const levelOptions = {
+    id: "spritegrid-save",
+    types: [
+        { description: "Accepted SpriteGrid Files",
+            accept: {
+                "text/plain": [".gle"],
+                "image/png": [".png"],
+            },
+        },
+
+        { description: "GLE Level Editor Files",
+            accept: {
+                "text/plain": [".gle"],
+            },
+        },
+
+        { description: "Portable Network Graphics",
+            accept: {
+                "image/png": [".png"],
+            },
+        },
+    ],
+    excludeAcceptAllOption: false,
+    suggestedName: "LevelEditor",
+    multiple: false,
+};
+
+const metaBaseTemplate = {
+    type: null,
+    name: null,
+    notes: null,
+};
+
+function metaStamp(type, name = null, notes = null) {
+    const now = Date.now();
+    return { ...metaBaseTemplate, type, name, notes, createdUtc: now, modifiedUtc: now };
+}
+
+const levelMetaTemplate = {
+...metaBaseTemplate,
+    /*spriteSheetForegroundObjectsRef: null,   // or an id later
+    spriteSheetForegroundParallaxRef: null,
+    spriteSheetForegroundRelicsRef: null,
+    spriteSheetForegroundOccludersRef: null,
+    spriteSheetForegroundMarkersRef: null,
+    spritesheetMiddleGroundCharactersRef: null,
+    spriteSheetBackgroundRef: null,
+    spriteSheetBackgroundParallaxRef: null,
+    spriteSheetBackgroundSkyboxRef: null,
+    spriteSheetBackgroundMidgroundElementsRef: null,*/
+}
+
+const spriteSheetMetaTemplate = {
+...metaBaseTemplate,
+}
+
+const spriteIndividualTemplate = {
+    id: -1,
+    name: "",
+    notes: "",
+    createdUtc: 0,
+    modifiedUtc: 0,
+    wPx: 0,
+    hPx: 0,
+    pixels: null, // Uint32Array after load
+    xCell: 0,
+    yCell: 0
+};
+
+
 // ─────────────────────────────────────────────
 // .gss (SG4GSS) Sprite Sheet v4 helpers
 // Spec: gss-spec.txt
@@ -348,6 +418,253 @@ function parseGssV4String(text) {
     requestRerender();
 }
 
+function buildGssV4SpecString() {
+    const now = Date.now();
+
+    // Preserve sheet createdUtc across saves (ms epoch)
+    sg4.gssMeta ??= {};
+    if (!sg4.gssMeta.createdUtc) sg4.gssMeta.createdUtc = now;
+
+    // Count real sprites (sprites[] can have null holes)
+    const spriteList = [];
+    for (let i = 0; i < (sprites?.length ?? 0); i++) {
+        const s = sprites[i];
+        if (!s) continue;
+        spriteList.push(s);
+    }
+
+    // Metadata (JSON section) per spec
+    const meta = {
+        type: "spritesheet",
+        name: (docState?.sprites?.fileName ?? "Untitled Sheet"),
+        createdUtc: sg4.gssMeta.createdUtc,
+        modifiedUtc: now,
+        notes: null,
+        gridCellSize: (typeof BASE_CELL_PX !== "undefined" ? (BASE_CELL_PX | 0) : 16),
+        colorParadigm: (typeof SG4_NATIVE_COLOR_PARADIGM !== "undefined" ? SG4_NATIVE_COLOR_PARADIGM : "ABGR"),
+        spriteCount: spriteList.length
+    };
+
+    const lines = [];
+    lines.push("SG4GSS");
+    lines.push(JSON.stringify(meta, null, 2));
+    lines.push("---");
+    lines.push("SPRITES");
+
+    // P:<id>:<wPx>:<hPx>:<createdUtc>:<modifiedUtc>:<pixelData>
+    for (let i = 0; i < (sprites?.length ?? 0); i++) {
+        const s = sprites[i];
+        if (!s) continue;
+
+        const id = (s.id != null ? (s.id | 0) : (i | 0));
+        const wPx = (s.wPx | 0);
+        const hPx = (s.hPx | 0);
+
+        // Stamp per-sprite timestamps if missing
+        if (!s.createdUtc) s.createdUtc = now;
+        s.modifiedUtc = now;
+
+        // Normalize pixel buffer
+        const expected = wPx * hPx;
+        let values = Array.from(s.pixels ?? []);
+
+        // Best-effort fix if mismatch
+        if (values.length !== expected) {
+            console.warn(`GSS(v4 spec) save: sprite ${id} pixel length mismatch (expected ${expected}, got ${values.length}). Normalizing.`);
+            const fixed = new Array(expected).fill(0);
+            for (let k = 0; k < Math.min(expected, values.length); k++) fixed[k] = (values[k] >>> 0);
+            values = fixed;
+        } else {
+            // Ensure unsigned
+            for (let k = 0; k < values.length; k++) values[k] = (values[k] >>> 0);
+        }
+
+        lines.push(`P:${id}:${wPx}:${hPx}:${(s.createdUtc | 0)}:${(s.modifiedUtc | 0)}:${values.join(",")}`);
+    }
+
+    lines.push("PLACEMENTS");
+
+    // L:<spriteId>:<xCell>:<yCell>
+    for (let i = 0; i < (sprites?.length ?? 0); i++) {
+        const s = sprites[i];
+        if (!s) continue;
+
+        const id = (s.id != null ? (s.id | 0) : (i | 0));
+        lines.push(`L:${id}:${(s.xCell | 0)}:${(s.yCell | 0)}`);
+    }
+
+    // META (optional)
+    lines.push("META");
+    // M:<id>:<name>:<notes>
+    for (let i = 0; i < (sprites?.length ?? 0); i++) {
+        const s = sprites[i];
+        if (!s) continue;
+
+        const id = (s.id != null ? (s.id | 0) : (i | 0));
+        const name = (s.name ?? "").toString();
+        const notes = (s.notes ?? "").toString();
+        if (!name && !notes) continue;
+
+        lines.push(`M:${id}:${gssEscape(name)}:${gssEscape(notes)}`);
+    }
+
+
+    // Final newline (nice for text editors)
+    return lines.join("\n") + "\n";
+}
+
+function parseGssV4SpecString(text) {
+    const raw = String(text ?? "");
+    const lines = raw.replace(/\r/g, "").split("\n");
+
+    if ((lines[0] ?? "").trim() !== "SG4GSS") {
+        throw new Error("Not an SG4GSS file (missing magic header)");
+    }
+
+    // Find '---' divider
+    let divider = -1;
+    for (let i = 1; i < lines.length; i++) {
+        if ((lines[i] ?? "").trim() === "---") { divider = i; break; }
+    }
+    if (divider < 0) throw new Error("SG4GSS spec missing '---' divider");
+
+    // Parse JSON metadata block: lines[1..divider-1]
+    const jsonBlock = lines.slice(1, divider).join("\n").trim();
+    let meta;
+    try { meta = JSON.parse(jsonBlock); }
+    catch { throw new Error("Invalid SG4GSS metadata JSON"); }
+
+    const gridCellSize = (meta?.gridCellSize | 0) || (typeof BASE_CELL_PX !== "undefined" ? (BASE_CELL_PX | 0) : 16);
+
+    // Parse payload sections
+    let i = divider + 1;
+    while (i < lines.length && !(lines[i] ?? "").trim()) i++;
+
+    if ((lines[i] ?? "").trim() !== "SPRITES") {
+        throw new Error("SG4GSS spec missing SPRITES section");
+    }
+    i++;
+
+    const spritesById = new Map();
+
+    // Read P lines until PLACEMENTS
+    for (; i < lines.length; i++) {
+        const line = (lines[i] ?? "").trim();
+        if (!line) continue;
+        if (line === "PLACEMENTS") break;
+        if (!line.startsWith("P:")) continue;
+
+        const parts = line.split(":");
+        if (parts.length < 7) throw new Error(`Bad P record: ${line}`);
+
+        const id = parts[1] | 0;
+        const wPx = parts[2] | 0;
+        const hPx = parts[3] | 0;
+        const createdUtc = Number(parts[4]);
+        const modifiedUtc = Number(parts[5]);
+
+        const pixelStr = parts.slice(6).join(":");
+        const px = pixelStr ? pixelStr.split(",").map(v => (parseInt(v, 10) >>> 0)) : [];
+
+        spritesById.set(id, { id, wPx, hPx, createdUtc, modifiedUtc, pixels: px });
+    }
+
+    if (i >= lines.length || (lines[i] ?? "").trim() !== "PLACEMENTS") {
+        throw new Error("SG4GSS spec missing PLACEMENTS section");
+    }
+    i++;
+
+    const placements = [];
+    for (; i < lines.length; i++) {
+        const line = (lines[i] ?? "").trim();
+        if (!line) continue;
+
+        // ✅ Stop when META begins
+        if (line === "META") break;
+
+        if (!line.startsWith("L:")) continue;
+
+        const parts = line.split(":");
+        if (parts.length < 4) throw new Error(`Bad L record: ${line}`);
+
+        const spriteId = parts[1] | 0;
+        const xCell = parts[2] | 0;
+        const yCell = parts[3] | 0;
+
+        placements.push({ spriteId, xCell, yCell });
+    }
+
+    // ✅ META parsing (i is currently at "META" or end)
+    const metaById = new Map();
+    for (; i < lines.length; i++) {
+        const line = (lines[i] ?? "").trim();
+        if (!line || line === "META") continue;
+        if (!line.startsWith("M:")) continue;
+
+        const parts = line.split(":");
+        const id = parts[1] | 0;
+        const name = gssUnescape(parts[2] ?? "");
+        const notes = gssUnescape(parts.slice(3).join(":") ?? "");
+        metaById.set(id, { name, notes });
+    }
+
+    // Allocate sheet (dimensions driven by app globals for now)
+    allocSheet(sheetCols, sheetRows);
+
+    sprites = [];
+    selectedSprites.clear();
+    selectedSpriteId = -1;
+    hoveredSpriteId = -1;
+
+    placements.sort((a, b) => (a.spriteId - b.spriteId) || (a.yCell - b.yCell) || (a.xCell - b.xCell));
+
+    let maxId = -1;
+    for (const p of placements) if (p.spriteId > maxId) maxId = p.spriteId;
+    if (maxId >= 0) sprites.length = maxId + 1;
+
+    for (const p of placements) {
+        const src = spritesById.get(p.spriteId);
+        if (!src) continue;
+
+        const wCells = Math.max(1, Math.ceil((src.wPx | 0) / gridCellSize));
+        const hCells = Math.max(1, Math.ceil((src.hPx | 0) / gridCellSize));
+
+        if (!canPlaceRect(p.xCell, p.yCell, wCells, hCells)) {
+            console.warn(`GSS spec load: cannot place sprite ${p.spriteId} at ${p.xCell},${p.yCell}. Skipping.`);
+            continue;
+        }
+
+        const metaRec = metaById.get(p.spriteId) ?? { name: "", notes: "" };
+
+        const s = {
+            id: p.spriteId,
+            name: metaRec.name ?? "",
+            notes: metaRec.notes ?? "",
+            createdUtc: (src.createdUtc | 0) || 0,
+            modifiedUtc: (src.modifiedUtc | 0) || 0,
+            wPx: src.wPx | 0,
+            hPx: src.hPx | 0,
+            pixels: (src.pixels ?? []).map(v => (v >>> 0)),
+            xCell: p.xCell | 0,
+            yCell: p.yCell | 0,
+            wCells,
+            hCells
+        };
+
+        sprites[p.spriteId] = s;
+        stampRect(s.xCell, s.yCell, s.wCells, s.hCells, s.id);
+    }
+
+    // Preserve sheet createdUtc if present
+    sg4.gssMeta ??= {};
+    if (meta?.createdUtc) sg4.gssMeta.createdUtc = meta.createdUtc;
+
+    markSheetStaticDirty();
+    requestRerender();
+
+}
+
+
 
 function resetWorkingGridCellSizeDefault() {
     cellSize = 24;
@@ -557,12 +874,26 @@ function parseSpriteGrid() {
 }
 
 async function parseSSheetFile() {
-    // v4+ (current)
+    // v4+ (current) — SPEC FORMAT (line-based)
     const t = String(openSSheetContents ?? "").trimStart();
+
+// New spec format starts with "SG4GSS\n" and contains a JSON block then "---"
+    if (t.startsWith("SG4GSS\n") || t === "SG4GSS") {
+        try {
+            parseGssV4SpecString(t);
+            displayLegacyAlert = false;
+            return;
+        } catch (e) {
+            // If it wasn't spec, we keep going (could be the legacy pipe format)
+            console.warn("GSS spec parse failed, falling back:", e);
+        }
+    }
+
+// Legacy v4 pipe format
     if (t.startsWith("SG4GSS|")) {
         try {
             parseGssV4String(t);
-            displayLegacyAlert = false;
+            displayLegacyAlert = false; // treat as legacy now
             return;
         } catch (e) {
             alert(`Invalid .gss file:\n\n${e.message}`);
@@ -937,7 +1268,8 @@ async function spriteSheetSave() {
     const sSheetFileHandle = await window.showSaveFilePicker(spriteSheetOptions);
     const sSheetFileWritableStream = await sSheetFileHandle.createWritable();
 
-    const fileData = buildGssV4String();
+    // NEW: write spec-compliant, line-based SG4GSS v4.0
+    const fileData = buildGssV4SpecString();
     await sSheetFileWritableStream.write(fileData);
     await sSheetFileWritableStream.close();
 
@@ -948,6 +1280,7 @@ async function spriteSheetSave() {
 
     requestRerender();
 }
+
 
 function buildGatV3JsonObject() {
     const now = sg4.utcNowIso();
@@ -1193,3 +1526,17 @@ async function guardUnsaved(kind, labelPrefix, doNext) {
     // either saved, or chose "nosave"
     return doNext();
 }
+
+function saveLevelGridAsPNG() {
+    try {
+        const a = document.createElement("a");
+        const base = (docState?.level?.fileName ?? "Level.gle").replace(/\.[^.]+$/, "");
+        a.download = base + ".png";
+        a.href = levelCanvas.toDataURL("image/png");
+        a.click();
+    } catch (err) {
+        console.error(err);
+        alert("Could not export PNG (see console).");
+    }
+}
+

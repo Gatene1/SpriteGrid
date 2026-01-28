@@ -211,6 +211,17 @@
                 <input type="text" id="uintToHexText" class="form-control" value="To Hex">
                 <button type="button" class="btn btn-success" data-bs-toggle="button" id="uintToHexButton">Uint to Hex</button>
             </div>
+            <div class="optionsBooskaTuts">
+                <div> <img class="imageFit" alt="Tutorial Booska" src="./Drawing Files/Graduate_Booska.png" /> </div>
+                <div class="divInnerBottomFlexColChildFile2">
+                    <button class="btn-pill">Overview Video</button>
+                    <button class="btn-pill">Working Grid Tour</button>
+                    <button class="btn-pill">Preview Window Tour</button>
+                    <button class="btn-pill">Color Picker Tour</button>
+                    <button class="btn-pill">Sprite Sheet Editor Tour</button>
+                    <button class="btn-pill">Level Editor Tour</button>
+                </div>
+            </div>
         </div>
     </div>
     <!-- End Fifth Window (File Saving) //-->
@@ -225,6 +236,29 @@
         <div class="divInnerBottomFlexColChildSprite">
             <div id="divForSpriteGrid" class="divForSpriteGrid">
                 <canvas id="spriteCanvas" width="700" height="3750"></canvas>
+                <!-- Yes, it's a table. It's intentional. It's only for this RMB context menu -->
+                <div class="spriteRMB ctx-menu" id="spriteRMB">
+                    <table border="0" width="100%" id="spriteRMBTable">
+                        <tr>
+                            <td id="spriteRMBHeader">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td data-name="duplicate.selectable">Duplicate</td>
+                        </tr>
+                        <tr>
+                            <td data-name="erase.selectable">Erase</td>
+                        </tr>
+                        <tr>
+                            <td class="tableTDBorderBottom">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td data-name="metadata.selectable">Metadata</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
             <div class="spriteRightButtonDiv">
                 <button class="btn btn-success" id="newSSheet">New Sprite Sheet</button>
@@ -251,14 +285,14 @@
             </div>
             <div class="levelRightButtonDiv">
                 <input type="text" id="levelDebugging" />
-                <button type="button" class="btn btn-success" id="levelBgColor">Change BG Color</button>
-
+                <button class="bg-btn" id="levelBgColor" title="Uses the main color wheel for the level background.">
+                    <span class="bg-icon">🎨</span>
+                    <span class="bg-text">Change BG Color</span>
+                </button>
                 <label class="form-check-label" for="showLevelGridCheckbox">
                     <input type="checkbox" class="form-check-input" value="" id="showLevelGridCheckbox" checked />
                     Show Grid
                 </label><br><br>
-                <button type="button" class="btn btn-success" data-bs-toggle="button" id="saveLevelPNGButton">Save As PNG</button><br><br>
-
                 <button type="button" class="btn btn-success" id="newLevel">New Level</button>
                 <button type="button" class="btn btn-success" id="openLevel">Open Level</button>
                 <button type="button" class="btn btn-success" id="levelSaveButton">Save Level</button><br><br>
@@ -269,18 +303,30 @@
     </div>
     <!-- End Seventh Window (Level Editor) //-->
 
-    <script type="text/javascript" src="js/sg4_Colors.js"></script>
-    <script type="text/javascript" src="js/sg4_Tools.js"></script>
+    <!-- Metadata Windows -->
+    <div class="spriteMetadataDiv" id="spriteMetadataDiv">
+        <div class="meta-left"><canvas width="256" height="256" id="meta-Preview"></canvas></div>
+        <div class="meta-right1">&nbsp;<label for="id">ID:&nbsp;</label><input id="id" type="text" readonly /></div>
+        <div class="meta-right2">&nbsp;<label for="spriteName">Name:&nbsp;</label><input id="spriteName" type="text"></div>
+        <div class="meta-right3">&nbsp;<label for="notes">Notes:&nbsp;</label><textarea id="notes"></textarea></div>
+        <div class="meta-left2">
+            <div><button class="btn btn-success" id="meta-btn2">Cancel</button></div>
+            <div><button class="btn btn-success" id="meta-btn">Save Metadata</button></div>
+        </div>
+    </div>
+
     <script type="text/javascript" src="js/sg4_Classes.js"></script>
-    <script type="text/javascript" src="js/sg4_History.js"></script>
+    <script type="text/javascript" src="js/sg4_Colors.js"></script>
     <script type="text/javascript" src="js/sg4.js"></script>
+    <script type="text/javascript" src="js/sg4_Tools.js"></script>
+    <script type="text/javascript" src="js/sg4_History.js"></script>
+    <script type="text/javascript" src="js/sg4_Level.js"></script>
     <script type="text/javascript" src="js/sg4_Grid.js"></script>
     <script type="text/javascript" src="js/sg4_Draw.js"></script>
     <script type="text/javascript" src="js/sg4_Window.js"></script>
     <script type="text/javascript" src="js/sg4_Mouse.js"></script>
     <script type="text/javascript" src="js/sg4_Inputs.js"></script>
     <script type="text/javascript" src="js/sg4_Files.js"></script>
-    <script type="text/javascript" src="js/sg4_Level.js"></script>
     <script type="text/javascript" src="js/sg4_SSheet.js"></script>
 
 </body>

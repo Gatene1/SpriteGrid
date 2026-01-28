@@ -559,3 +559,19 @@ Visual Polish
 # 1/23/2026
 - Moved the color converters to the bottom of the Options Menu winow.
 - Made a Booska picture to use as the mascot for the window.
+
+# 1/24/2026
+- Changed the Booska picture to a cartoonized Booska.
+- Made "Booska Purple" canon with OutBox Games.
+- Added the buttonset for the tutorial videos to the Options Menu window.
+
+# 1/25, 1/26, 1/27, 1/28/2026
+- Rebuilt the logic behind the buttons in the sprite sheet editor.
+- Rebuilt the gss-spec.txt file for up-to-date .gss file structure.
+- Added ability to save the spritesheet as a PNG file via the save button.
+- changed how sprites were imported into the spritesheet editor, from seeing a tiny version of the sprite trailing the mouse pointer, to a green/red projection of the size of the sprite on the grid.
+- Allowed sprites to take up more than 1 cell at the time, keeping track of how large the sprites were, so could tell, at load-time, how many cells it would take up.
+- Implemented a RMB context menu.
+- Implemented the "Duplicate", "Erase", and "Metadata" options on the context menu, and their functionality.
+- Created the dialog box for adding metadata to a speciic sprite in the sprite sheet.
+- Fixed a nasty bug that resulted from the metadata dialog box, where you coudl no longer move a sprite around the grid.

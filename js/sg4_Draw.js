@@ -381,6 +381,8 @@ function drawLevelCanvasUpdate() {
     let spriteGridFillColor;
     let spriteGridFillBool;
 
+    levelSyncToCanvas();
+
     //levelDebugging.value = levelSpriteHeld;
 
     // Clear the canvas, and then redraw the chosen background color.
@@ -395,6 +397,11 @@ function drawLevelCanvasUpdate() {
     squaresForLevelGridWidth = Math.floor(levelCanvasWidth / levelGridCellSize); // Should be 17 initially
     squaresForLevelGridHeight = Math.floor(levelCanvasHeight / levelGridCellSize); // should be 15 initially
     levelGridSize = squaresForLevelGridWidth * squaresForLevelGridHeight;
+
+    // Ensure backing array matches the level grid size
+    if (!Array.isArray(levelGrid) || levelGrid.length !== levelGridSize) {
+        levelGrid = new Array(levelGridSize).fill(null);
+    }
 
     for (k = 0; k < levelGridSize; k++) {
         if (levelCellOn == k) {
@@ -449,6 +456,7 @@ function drawLevelCanvasUpdate() {
 
 function changeLevelBG() {
     bgColorChoose = currColor;
+    requestRerender();
 }
 
 function turnGridOnOff() {
@@ -492,6 +500,7 @@ function redrawGridOverlay() {
 }
 function turnLevelGridOnOff() {
     showTheLevelGrid = showLevelGridCheckbox.checked;
+    requestRerender();
 }
 
 function drawLevelExtendIcon() {
@@ -1041,4 +1050,65 @@ function drawPreviewOverlayMessage(lines) {
 function drawReticleOrNot() {
     showReticle = showReticleCheckbox.checked;
     drawPreviewUpdate();
+}
+
+function drawMetaPreviewSprite(sprite) {
+    if (!metaPreview || !metaPreviewCTX) return;
+
+    const ctx = metaPreviewCTX;
+    const cw = metaPreview.width  | 0;  // 256
+    const ch = metaPreview.height | 0;  // 256
+
+    // Clear
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+
+    if (!sprite || !sprite.pixels || !sprite.wPx || !sprite.hPx) {
+        // Optional: draw placeholder text
+        ctx.font = "16px Arial";
+        ctx.fillText("No sprite", 10, 24);
+        return;
+    }
+
+    const w = sprite.wPx | 0;
+    const h = sprite.hPx | 0;
+
+    // Integer scale so pixels stay crisp.
+    const scale = Math.max(1, Math.floor(Math.min(cw / w, ch / h)));
+
+    const drawW = w * scale;
+    const drawH = h * scale;
+
+    const offX = ((cw - drawW) / 2) | 0;
+    const offY = ((ch - drawH) / 2) | 0;
+
+    // Build ImageData from the sprite pixels (Uint32Array -> RGBA bytes)
+    // Assumes your sprite.pixels are in NATIVE_FORMAT = ABGR.
+    const img = ctx.createImageData(w, h);
+    const dst = img.data;          // Uint8ClampedArray (RGBA)
+    const src = sprite.pixels;     // Uint32Array (ABGR)
+
+    for (let i = 0, p = 0; i < src.length; i++, p += 4) {
+        const u = src[i] >>> 0;
+        // ABGR -> bytes
+        const a = (u >>> 24) & 0xFF;
+        const b = (u >>> 16) & 0xFF;
+        const g = (u >>>  8) & 0xFF;
+        const r = (u       ) & 0xFF;
+
+        dst[p + 0] = r;
+        dst[p + 1] = g;
+        dst[p + 2] = b;
+        dst[p + 3] = a;
+    }
+
+    // Draw via an offscreen canvas so drawImage can scale it crisply
+    const tmp = document.createElement("canvas");
+    tmp.width = w;
+    tmp.height = h;
+    const tctx = tmp.getContext("2d");
+    tctx.putImageData(img, 0, 0);
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(tmp, 0, 0, w, h, offX, offY, drawW, drawH);
 }

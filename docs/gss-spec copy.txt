@@ -1,135 +1,134 @@
-SG4GSS Sprite Sheet Specification (.gss)
-================================
-
-Overview
---------
-.gss files store sprite sheets for SpriteGrid 4.0+.
-
-The format is a hybrid:
-- Text-based
-- Structured JSON header
-- Delimited payload
-
-This is a named, SpriteGrid-owned format.
-
---------------------------------------------------
-
-FILE STRUCTURE
-
 SG4GSS
-{JSON HEADER}
+SpriteGrid Sprite Sheet File Specification v4.0
 
-PAYLOAD
+----------------------------------------
+FILE OVERVIEW
+----------------------------------------
+A .gss file is a custom SpriteGrid sprite sheet container.
 
---------------------------------------------------
+It consists of:
+1. A magic header
+2. A JSON metadata section
+3. A structured data-dump payload
 
-MAGIC HEADER
+This format is intentionally human-readable, versioned, and hand-designed.
 
-Line 1 must be:
+----------------------------------------
+FILE STRUCTURE (HIGH LEVEL)
+----------------------------------------
+SG4GSS
+{ JSON METADATA }
+---
+SPRITES
+P-records...
+PLACEMENTS
+L-records...
+
+----------------------------------------
+1. MAGIC HEADER
+----------------------------------------
 SG4GSS
 
-Used to validate file type before parsing.
+Identifies the file as a SpriteGrid v4 sprite sheet.
+Must appear on line 1.
+Parser should reject files without this header.
 
---------------------------------------------------
+----------------------------------------
+2. METADATA SECTION (JSON)
+----------------------------------------
+Purpose:
+- Describe how to interpret the sprite sheet
+- Store versioning and descriptive info
+- Does NOT contain pixel data
 
-JSON HEADER
-
-The JSON block ends at the first blank line.
-
-Required fields:
+Example:
 
 {
-  "format": "GSS",
-  "version": 1,
-  "sheet": {
-    "cols": <int>,
-    "rows": <int>,
-    "baseCellPx": <int>,
-    "colorParadigm": "RGBA",
-    "colorPacking": "0xRRGGBBAA"
-  }
+  "type": "spritesheet",
+  "name": "Untitled Sheet",
+  "createdUtc": 1736559000000,
+  "modifiedUtc": 1736560123000,
+  "notes": null,
+  "gridCellSize": 16,
+  "colorParadigm": "ABGR",
+  "spriteCount": 12
 }
 
-Optional fields:
+Metadata ends at the first line containing only:
+---
 
-{
-  "name": "<string>",
-  "notes": "<string>",
-  "createdUtc": "<ISO-8601>",
-  "updatedUtc": "<ISO-8601>"
-}
+----------------------------------------
+3. PAYLOAD SECTION
+----------------------------------------
+Everything after --- is the data dump.
 
---------------------------------------------------
+----------------------------------------
+3.1 SPRITES SECTION
+----------------------------------------
+Begins with:
+SPRITES
 
-COLOR PARADIGM
+Each sprite is defined by a P-record.
 
-- Sprite pixels are stored as unsigned 32-bit integers
-- Channel order is defined by `colorParadigm`
-- Packing format is defined by `colorPacking`
-- Pixel value 0 always represents full transparency
+P-RECORD FORMAT:
+P:<id>:<wPx>:<hPx>:<createdUtc>:<modifiedUtc>:<pixelData>
 
-Example (RGBA):
-- 0xFF0000FF = solid red
-- 0x00000000 = transparent
+Field Definitions:
+- id: Unique sprite ID
+- wPx: Width in pixels
+- hPx: Height in pixels
+- createdUtc: Creation timestamp
+- modifiedUtc: Last modification timestamp
+- pixelData: Comma-separated Uint32 values (ABGR)
 
---------------------------------------------------
+Example:
+P:3:32:32:1736559000000:1736560123000:0,0,4294967295,...
 
-PAYLOAD
+----------------------------------------
+3.2 PLACEMENTS SECTION
+----------------------------------------
+Begins with:
+PLACEMENTS
 
-Payload blocks are pipe-delimited and appear in fixed order:
+L-RECORD FORMAT:
+L:<spriteId>:<xCell>:<yCell>
 
-SPRITES:<count>|
-PLACEMENTS:<count>|
-META:<count>|   (optional)
+Example:
+L:3:5:2
 
---------------------------------------------------
+----------------------------------------
+DERIVED DATA (NOT STORED)
+----------------------------------------
+The following values are calculated at load time:
+- wCells
+- hCells
 
-SPRITES BLOCK
+Derived as:
+wCells = ceil(wPx / gridCellSize)
+hCells = ceil(hPx / gridCellSize)
 
-SPRITES:<count>|
-S:<id>:<wPx>:<hPx>:<pixelCount>:<pixel0>,<pixel1>,...
+----------------------------------------
+IN-MEMORY SPRITE OBJECT (REFERENCE)
+----------------------------------------
+This is NOT file format, but the in-editor representation:
 
-Rules:
-- IDs are sequential on save (0..n-1)
-- Pixels are base-10 representations of packed 32-bit values
+spriteIndividualTemplate:
+id
+name
+notes
+createdUtc
+modifiedUtc
+wPx
+hPx
+pixels (Uint32Array)
+xCell
+yCell
 
---------------------------------------------------
-
-PLACEMENTS BLOCK
-
-PLACEMENTS:<count>|
-P:<spriteId>:<xCell>:<yCell>:<wCells>:<hCells>:<rot>
-
-Rules:
-- A sprite ID may appear multiple times
-- rot must be 0 for v4 writers
-- Readers must tolerate non-zero rot
-
---------------------------------------------------
-
-META BLOCK (optional)
-
-META:<count>|
-M:<spriteId>:<name>:<notes>
-
-String escaping:
-- \| = literal pipe
-- \\ = literal backslash
-- \n = newline
-
---------------------------------------------------
-
-ID COMPACTION
-
-- Runtime editing may create sparse IDs
-- On save, IDs are compacted
-- Placements and metadata remap automatically
-
---------------------------------------------------
-
-INTEGRITY (future)
-
-Optional checksum or hash may be added.
-Readers should ignore unknown fields.
-
---------------------------------------------------
+----------------------------------------
+DESIGN PRINCIPLES
+----------------------------------------
+- Metadata describes; payload contains data
+- JSON only where it makes sense
+- Pixel data remains a dump
+- Format must be inspectable and editable by hand
+- Forward-compatible by design
